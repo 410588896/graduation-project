@@ -62,7 +62,7 @@ VOID Que::ReturnNode(Block *node, UINT _tid)
 			Head = (Head + 1) % Num; 
 			Chunk[Head]->ptr = node->ptr;
 			Chunk[Head]->tid = node->tid;
-			__sync_add_and_fetch (&Free, 1);  //--Free
+			__sync_add_and_fetch (&Free, 1);  //++Free
 		}
 		else
 			ReturnToTrash(node, _tid);
