@@ -15,7 +15,11 @@ VOID *worker(VOID *arg)
 	free(arg);
 	Block block;
 	block.ptr = MemPool[tid - 1]->GetNode(block.tid);
-	while(1);
+	while(1)
+	{
+		block.ptr = MemPool[tid - 1]->GetNode(block.tid);
+		printf("heheda%p\n", block.ptr);
+	}
 }
 
 INT main()
