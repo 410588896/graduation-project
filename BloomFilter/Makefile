@@ -8,7 +8,7 @@ INC := $(wildcard ./*.h)
 .cpp.o: 
 	$(CC) -c -g $<
 
-BloomFlilter:$(OBJ)
+BloomFilter:$(OBJ)
 	@echo "Compiling......"
 	$(CC) -o $@ $^ 
 	@echo "Done......"

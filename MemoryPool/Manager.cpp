@@ -7,7 +7,10 @@ VOID ReAlloc(UINT stid, UINT dtid)
 {
 	VOID *ptr = NULL;
 	UINT _tid = 0;
-	ptr = MemPool[stid]->Chunk[MemPool[stid]->Tail]->ptr; 
+	if(MemPool[stid]->Tail != MemPool[stid]->Head)		
+		ptr = MemPool[stid]->Chunk[MemPool[stid]->Tail]->ptr; 
+	else
+		return;
 	_tid = MemPool[stid]->Chunk[(MemPool[stid]->Tail)]->tid;
 	MemPool[stid]->Tail = (MemPool[stid]->Tail + 1) % MemPool[stid]->Num;
 	__sync_sub_and_fetch (&(MemPool[stid]->Free), 1);  
@@ -72,42 +75,42 @@ VOID *Manager(VOID *arg)
 					more += (MemPool[i]->Num >> 1) - MemPool[i]->Free;
 					++bignum;
 				}
-				if(smallnum != 0 && bignum != 0)
+			}
+			if(smallnum != 0 && bignum != 0)
+			{
+				if(more < smallnum)
 				{
-					if(more < smallnum)
+					INT tmp = 0;
+					while(tmp <= bignum)
 					{
-						INT tmp = 0;
-						while(tmp <= bignum)
-						{
-							while(MemPool[big[tmp]]->Free > (MemPool[big[tmp]]->Num >> 1))
-								ReAlloc(big[tmp], less);
-							++tmp;
-						}
+						while(MemPool[big[tmp]]->Free > (MemPool[big[tmp]]->Num >> 1))
+							ReAlloc(big[tmp], less);
+						++tmp;
 					}
-					else
+				}
+				else
+				{
+					INT avg = more / smallnum;
+					for(INT j = 0; j < smallnum; ++j)
 					{
-						INT avg = more / smallnum;
-						for(INT j = 0; j < smallnum; ++i)
+						if(small[j] == less)
 						{
-							if(small[j] == less)
+							INT tmp = 0;
+							while(tmp < (avg + (more % smallnum)))
 							{
-								INT tmp = 0;
-								while(tmp < (avg + (more % smallnum)))
-								{
-									while(MemPool[big[tmp]]->Free > (MemPool[big[tmp]]->Num >> 1))
-										ReAlloc(big[tmp], less);
-									++tmp;
-								}
+								while(MemPool[big[tmp]]->Free > (MemPool[big[tmp]]->Num >> 1))
+									ReAlloc(big[tmp], less);
+								++tmp;
 							}
-							else
+						}
+						else
+						{
+							INT tmp = 0;
+							while(tmp < avg)
 							{
-								INT tmp = 0;
-								while(tmp < avg)
-								{
-									while(MemPool[big[tmp]]->Free > (MemPool[big[tmp]]->Num >> 1))
-										ReAlloc(big[tmp], small[j]);
-									++tmp;
-								}
+								while(MemPool[big[tmp]]->Free > (MemPool[big[tmp]]->Num >> 1))
+									ReAlloc(big[tmp], small[j]);
+								++tmp;
 							}
 						}
 					}

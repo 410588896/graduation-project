@@ -1,11 +1,32 @@
-#include "BloomFilter.h"
+#include "Old_BF.h"
 
 //#define DEBUG
 
-VOID BloomFilter::setBit(const CHAR *str, INT len)
+/*
+VOID BF::setBit(std::ifstream &f)
+{
+    std::string line;
+    while(f >> line)
+    {
+        setBit(line);
+    }
+}
+
+BOOL BF::checkBit(std::ifstream &f)
+{
+    string line;
+    while(f >> line)
+    {
+        if(!checkBit(line))
+            std::cout << line << std::endl;
+    }
+}
+*/
+
+VOID BF::setBit(const CHAR *str, INT len)
 {
 #ifdef DEBUG
-	printf("Add %s:%d to BloomFilter\n", str, len);
+	printf("Add %s:%d to BF\n", str, len);
 #endif
 	UINT bitpos = 0;
 	
@@ -31,7 +52,7 @@ VOID BloomFilter::setBit(const CHAR *str, INT len)
 	setBit(bitpos);
 }
 
-BOOL BloomFilter::checkBit(const CHAR *str, INT len)
+BOOL BF::checkBit(const CHAR *str, INT len)
 {
 	UINT bitpos = 0;
 	BOOL rev = true;
@@ -59,15 +80,13 @@ BOOL BloomFilter::checkBit(const CHAR *str, INT len)
 	return rev;
 }
 
-VOID BloomFilter::setBit(UINT count)
+VOID BF::setBit(UINT count)
 {
 	count = count % (SIZE * 8);
-	if(vec[count / 8] & (1 << (count % 8)))
-		Numof1++;
 	vec[count / 8] |= (1 << (count % 8));
 }
 
-BOOL BloomFilter::checkBit(UINT count)
+BOOL BF::checkBit(UINT count)
 {
 	count = count % (SIZE * 8);
 	return vec[count / 8] &= (1 << (count % 8));

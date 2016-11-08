@@ -12,7 +12,7 @@ struct Block
 {
 	Block() : ptr(NULL), tid(0) {};
 	Block(UINT size) : tid(0) {ptr = (VOID*)new CHAR(size);};
-	~Block() { if(ptr) delete (CHAR*)ptr; };
+	~Block() { if(ptr && tid != 0) delete (CHAR*)ptr; };
 	VOID *ptr;
 	UINT tid;
 };
