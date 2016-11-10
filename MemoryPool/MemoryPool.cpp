@@ -1,6 +1,6 @@
 #include "MemoryPool.h"
 
-extern TrashQue TQue[THREAD_NUM];
+extern TrashQue *TQue[THREAD_NUM];
 
 Que::~Que()
 {
@@ -41,6 +41,8 @@ VOID* Que::GetNode(UINT &tid)
 			--Head;
 		else
 			Head = Num - 1; 
+		if(tid == 0)
+			tid = 1;
 		return Chunk[tmp]->ptr;
 	}
 	else
@@ -48,6 +50,7 @@ VOID* Que::GetNode(UINT &tid)
 		tid = 0;
 		return (VOID*)new CHAR(Size);
 	}
+	tid = 0;
 	return NULL;
 }
 
@@ -128,7 +131,7 @@ BOOL TrashQue::IsFull()
 
 VOID ReturnToTrash(Block *node, UINT _tid)
 {
-	TQue[_tid - 1].Enque(node->ptr, node->tid);
+	TQue[_tid - 1]->Enque(node->ptr, node->tid);
 	return;
 }
 

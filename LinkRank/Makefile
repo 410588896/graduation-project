@@ -1,6 +1,6 @@
 CC 	= g++ -g 
 
-FLAG = -lpthread -march=i686
+FLAG = -lpthread
 
 FOO := $(wildcard ./*.cpp)
 BAR := $(basename $(FOO))
@@ -10,7 +10,7 @@ INC := $(wildcard ./*.h)
 .cpp.o: 
 	$(CC) -c -g $<
 
-MemoryPool:$(OBJ)
+LinkRank:$(OBJ)
 	@echo "Compiling......"
 	$(CC) -o $@ $^ $(FLAG) 
 	@echo "Done......"
@@ -22,12 +22,12 @@ sinclude $(FOO:.cpp=.d)
 	sed 's,\($*\)\.o[ :]*,\1.o $@ ,g' < $@.$$$$ > $@; \
 	$(RM) $@.$$$$
 
-release:MemoryPool
-	strip MemoryPool
+release:LinkRank
+	strip LinkRank
 
 clean:
 	@echo "Cleaning......"
-	rm -f *.o;rm -f *.d;rm -f MemoryPool;rm -f *~
+	rm -f *.o;rm -f *.d;rm -f LinkRank;rm -f *~
 	@echo "Done......"
 
 

@@ -1,6 +1,6 @@
 CC 	= g++ -g 
 
-FLAG = -lpthread -march=i686
+FLAG = -lpthread -ltcmalloc
 
 FOO := $(wildcard ./*.cpp)
 BAR := $(basename $(FOO))

@@ -36,7 +36,8 @@ VOID *Manager(VOID *arg)
 				{
 					VOID *ptr = NULL;
 					UINT _tid = 0;
-					TQue[i]->Deque(&ptr, _tid);
+					if(!(TQue[i]->Deque(&ptr, _tid)))
+						continue;
 					if(MemPool[j]->Tail == 0)
 						MemPool[j]->Tail = MemPool[j]->Num - 1;
 					else
@@ -55,7 +56,7 @@ VOID *Manager(VOID *arg)
 			INT smallnum = 0;
 			INT bignum = 0;
 			INT more = 0;
-			INT smallest = MemPool[0]->Free;
+			INT smallest = MemPool[i]->Num;
 			INT less = 0;
 			for(INT i = 0; i < THREAD_NUM; ++i)
 			{
@@ -81,7 +82,7 @@ VOID *Manager(VOID *arg)
 				if(more < smallnum)
 				{
 					INT tmp = 0;
-					while(tmp <= bignum)
+					while(tmp < bignum)
 					{
 						while(MemPool[big[tmp]]->Free > (MemPool[big[tmp]]->Num >> 1))
 							ReAlloc(big[tmp], less);
