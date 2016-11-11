@@ -89,5 +89,5 @@ VOID BF::setBit(UINT count)
 BOOL BF::checkBit(UINT count)
 {
 	count = count % (SIZE * 8);
-	return vec[count / 8] &= (1 << (count % 8));
+	return vec[count / 8] & (1 << (count % 8));
 }
