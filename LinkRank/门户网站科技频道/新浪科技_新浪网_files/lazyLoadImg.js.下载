@@ -1,0 +1,434 @@
+/*
+ * event.js
+ * @author : Zhong Yuan 2016.6.22
+ * @version : v1.1
+ */
+(function(){
+    var evt = {};
+    var special = {};
+    var _bcObj = {};
+
+    function on (el) {
+        var type, deleQuery, handle;
+        if(arguments.length < 3) {
+            throw new Error('Parameter error: at least 3 parameters needed!');
+        } else {
+            type = arguments[1];
+            if(arguments[3]) {
+                deleQuery = arguments[2];
+                handle = arguments[3];
+                delegate(el, type, deleQuery, handle);
+            } else {
+                handle = arguments[2];
+                bind(el, type, handle);
+            }
+        }
+    }
+
+    function off (el) {
+        var type, deleQuery, handle;
+        type = arguments[1];
+        if(arguments.length > 3) {
+            deleQuery = arguments[2];
+            handle = arguments[3];
+            undelegate(el, type, deleQuery, handle);
+        } else {
+            handle = arguments[2];
+            unbind(el, type, handle);
+            if(!handle) {
+                undelegate(el, type);
+            }
+        }
+    }
+
+    function bind (el, type, handle) {
+        if(!el.events || !el.events[type]) {
+            _initElement(el, type);
+        }
+        el.events[type].push(handle);
+    }
+
+    function unbind (el, type, handle) {
+        if(!el.events) {
+            return;
+        }
+        if(handle) {
+            if(el.events[type]) {
+                for(var i = 0, len = el.events[type].length; i < len; i++) {
+                    if(el.events[type][i] === handle) {
+                        el.events[type].splice(i, 1);
+                        break;
+                    }
+                }
+            }
+        } else if(type) {
+            if(el.events[type]) {
+                el.events[type].length = 0;
+            }
+        } else {
+            for(var i in el.events) {
+                if(el.events[i]) {
+                    el.events[i].length = 0;
+                }
+            }
+        }
+    }
+
+    function delegate (el, type, deleQuery, handle) {
+        _initElement(el, type);
+        el.delegs[type].push({
+            deleQuery : deleQuery,
+            handle : handle,
+            wrapHandle : function (e) {
+                var ev = e || window.event,
+                    target = ev.target || ev.srcElement,
+                    els = el.querySelectorAll(deleQuery);
+                target = target || this;
+                for (var i = 0, len = els.length; i < len; i++) {
+                    if (_contains(els[i], target)) {
+                        handle.apply(els[i], arguments);
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    function undelegate (el, type, deleQuery, handle) {
+        if(!el.delegs) {
+            return;
+        }
+        if(handle) {
+            if(el.delegs[type]) {
+                for(var i = 0, len = el.delegs[type].length; i < len; i++) {
+                    if(el.delegs[type][i].deleQuery === deleQuery && el.delegs[type][i].handle === handle) {
+                        el.delegs[type].splice(i, 1);
+                        break;
+                    }
+                }
+            }
+        } else if(type) {
+            if(el.delegs[type]) {
+                el.delegs[type].length = 0;
+            }
+        } else {
+            for(var i in el.delegs) {
+                el.delegs[i].length = 0;
+            }
+        }
+    }
+
+    function subscribe (type, handle) {
+        on(_bcObj, type, handle);
+    }
+
+    function unsubscribe (type, handle) {
+        off(_bcObj, type, handle);
+    }
+
+    function publish (type, pubData) {
+        trigger(_bcObj, type, pubData);
+    }
+
+    function trigger (el, type, e) {
+        while(el) {
+            _dispatch(el, type, e);
+            el = el.parentNode;
+        }
+    }
+
+    function _dispatch (el, type, e) {
+        var i, len;
+        if(!e || !e.target) {
+            e = _fixEvent(e, {
+                target : el,
+                type : type
+            });
+        }
+        if(el.delegs && el.delegs[type]) {
+            for(i = 0, len = el.delegs[type].length; i < len; i++) {
+                el.delegs[type][i].wrapHandle.call(el, e);
+            }
+        }
+        if(el.events && el.events[type]) {
+            for(i = 0, len = el.events[type].length; i < len; i++) {
+                el.events[type][i].call(el, e);
+            }
+        }
+    }
+
+    function _initElement (el, type) {
+        var eventInited, specialInited;
+        eventInited = el.delegs && el.events;
+
+        el.delegs = el.delegs || {};
+        el.delegs[type] = el.delegs[type] || [];
+        el.events = el.events || {};
+        el.events[type] = el.events[type] || [];
+
+        el.special = el.special || {};
+        specialInited = type in el.special;
+
+        if(!eventInited) {
+            if('on' + type in el) {
+                _addEvent(el, type, function () {
+                    var i, len;
+                    for(i = 0, len = el.delegs[type].length; i < len; i++) {
+                        el.delegs[type][i].wrapHandle.apply(el, arguments);
+                    }
+                    for(i = 0, len = el.events[type].length; i < len; i++) {
+                        el.events[type][i].apply(el, arguments);
+                    }
+                });
+            }
+        } else if(!specialInited && special[type]) {
+            special[type](el);
+            el.special[type] = true;
+        }
+    }
+
+    function _fixEvent (obj, toExtendObj) {
+        if(typeof obj !== 'object') {
+            obj = {};
+        }
+        for(var i in toExtendObj) {
+            // in ie8, got error while setting the 'type' attr of a event object
+            try{
+                obj[i] = toExtendObj[i];
+            }
+            catch(e){}
+        }
+        return obj;
+    }
+
+    function _addEvent (el, type, fn) {
+        if (el.addEventListener)
+            el.addEventListener(type, fn, false);
+        else if (el.attachEvent) {
+            el.attachEvent('on' + type, fn);
+        }
+    }
+
+    function _contains(a, b) {
+        if (a === b) {
+            return true;
+        }
+        if (a.contains) {
+            if (a.nodeType === 9) return true;
+            return a.contains(b);
+        } else if (a.compareDocumentPosition) {
+            return !!(a.compareDocumentPosition(b) & 16);
+        }
+        while ((b = b.parentNode)) {
+            if (a === b) return true;
+        }
+        return false;
+    }
+
+    // export
+    evt._addEvent = _addEvent;
+    evt._dispatch = _dispatch;
+    evt.on = on;
+    evt.off = off;
+    evt.bind = bind;
+    evt.unbind = unbind;
+    evt.delegate = delegate;
+    evt.undelegate = undelegate;
+    evt.subscribe = subscribe;
+    evt.unsubscribe = unsubscribe;
+    evt.publish = publish;
+    evt.trigger = trigger;
+    evt.special = special;
+    if (typeof module !== 'undefined' && module.exports && this.module !== module) { module.evt = evt; }
+    else if (typeof define === 'function' && define.amd) { define(evt); }
+    else { window.evt = evt; };
+})();
+
+evt.special.scrollend = function (el) {
+    var scrollTimeout;
+    evt._addEvent(el, 'scroll', function (e) {
+        scrollTimeout && clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(function () {
+            evt._dispatch(el, 'scrollend', e);
+        }, 200);
+    });
+};
+
+var LazyLoader = function() {
+    var init = function(opts) {
+        this._initConf(opts);
+        this._initElements();
+        this._initStates();
+        this._initEvents();
+        this._launch();
+    };
+    init.prototype = {
+        _extends : function (dest, src) {
+            for(var i in src) {
+                dest[i] = src[i];
+            }
+            return dest;
+        },
+        _id : function (id) {
+            return document.getElementById(id);
+        },
+        _getPos: function(o) {
+            var bound, p = {
+                x: 0,
+                y: 0
+            };
+            if(o.getBoundingClientRect) {
+                var bound = o.getBoundingClientRect();
+                p.x = bound.left + (window.scrollX ? window.scrollX : document.documentElement.scrollLeft);
+                p.y = bound.top + (window.scrollY ? window.scrollY : document.documentElement.scrollTop);
+            } else {
+                while (o.offsetParent) {
+                    p.x += o.offsetLeft;
+                    p.y += o.offsetTop;
+                    o = o.offsetParent;
+                }
+            }
+            return p;
+        },
+        _getScrollPos: function() {
+            var od, dd, db;
+            od = document;
+            dd = od.documentElement;
+            db = od.body;
+            return {
+                x : Math.max(dd.scrollLeft, db.scrollLeft),
+                y : Math.max(dd.scrollTop, db.scrollTop),
+                w : Math.max(dd.scrollWidth, db.scrollWidth),
+                h : Math.max(dd.scrollHeight, db.scrollHeight)
+            };
+        },
+        _getWinViewSize : function () {
+            var w, h;
+            if('innerHeight' in window) {
+                w = window.innerWidth;
+                h = window.innerHeight;
+            } else {
+                w = document.documentElement.clientWidth;
+                h = document.documentElement.clientHeight;
+            }
+            return {
+                w : w,
+                h : h
+            };
+        },
+        _initConf : function (opts) {
+            opts = opts || {};
+            this.conf = this._extends({
+                root : document.body,
+                attr : 'data-src',
+                auto : false,
+                onAppear : function () {
+                },
+                onLoading : function () {
+                },
+                onLoaded : function () {
+                    // body...
+                }
+            }, opts);
+        },
+        _initElements : function () {
+            var c = this.conf,
+                root;
+            root = typeof c.root === 'string' ? this._id(c.root) : c.root;
+            this.el = {
+                root : root,
+                lazyImgs : []
+            };
+        },
+        _initStates : function () {
+            this.state = {
+                hasUpdated : false,
+                willUpdate : false
+            };
+        },
+        _initEvents : function () {
+            var that = this,
+                c = this.conf,
+                d = this.el;
+            evt.on(window, 'resize', function (e) {
+                that.update();
+            });
+            evt.on(window, 'scrollend', function (e) {
+                that.showVisImgs();
+            });
+        },
+        _launch : function () {
+            var that = this,
+                c = this.conf;
+            this.update();
+            if(c.auto) {
+                setInterval(function () {
+                    that.update();
+                }, 200);
+            }
+        },
+        _updateImgs : function () {
+            var that = this,
+                c = this.conf, d = this.el,
+                imgsAll = d.root.querySelectorAll('[' + c.attr + ']'),
+                imgsAllLen = imgsAll.length,
+                lazyImgs = [],
+                curImgData, el4VisCheck, posY;
+            for(var i = 0; i < imgsAllLen; i++) {
+                if(!imgsAll[i]._showed) {
+                    el4VisCheck = imgsAll[i];
+                    while(!el4VisCheck.offsetWidth && el4VisCheck.parentNode) {
+                        el4VisCheck = el4VisCheck.parentNode;
+                    }
+                    curImgData = {
+                        tag : imgsAll[i],
+                        isImgTag : imgsAll[i].tagName === 'IMG',
+                        src : imgsAll[i].getAttribute('data-src'),
+                        posY : that._getPos(el4VisCheck).y
+                    };
+                    imgsAll[i].posY = curImgData.posY;
+                    lazyImgs.push(curImgData);
+                }
+            }
+            lazyImgs.sort(function (a, b) {
+                return a.posY - b.posY;
+            });
+            d.lazyImgs = lazyImgs;
+        },
+        update : function () {
+            var that = this,
+                s = this.state;
+            this._updateImgs();
+            this.showVisImgs();
+        },
+        showVisImgs : function () {
+            var that = this,
+                c = this.conf, d = this.el,
+                rootScrollTop, rootViewHth, curImg, imgSrc;
+            rootScrollTop = this._getScrollPos().y;
+            rootViewHth = this._getWinViewSize().h;
+            for(var i = 0; i < d.lazyImgs.length; i++) {
+                curImg = d.lazyImgs[i];
+                if(!curImg.tag._showed && curImg.posY > rootScrollTop - 300 && curImg.posY < rootScrollTop + rootViewHth + 300) {
+                    imgSrc = curImg.tag.getAttribute('data-src');
+                    if(curImg.isImgTag) {
+                        curImg.tag.src = imgSrc;
+                    } else {
+                        curImg.tag.style.backgroundImage = 'url(' + imgSrc + ')';
+                    }
+                    c.onLoading && c.onLoading.call(this, curImg);
+                    if(c.onLoaded) {
+                        (function(imgObj, cI){
+                            imgObj.src = imgSrc;
+                            evt.on(imgObj, 'load', function () {
+                                c.onLoaded.call(that, cI);
+                            });
+                        })(new Image, curImg);
+                    }
+                    curImg.tag._showed = true;
+                }
+            }
+        }
+    };
+    return init;
+}();

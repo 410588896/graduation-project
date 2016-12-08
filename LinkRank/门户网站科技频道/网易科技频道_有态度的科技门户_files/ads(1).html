@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!-- saved from url=(0076)http://cdn.vamaker.com/vamaker/vamaker_return.html?vmads=1896145260&origin=3 -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="renderer" content="webkit">
+<title>V Traffic Return v.2.0 </title>
+</head>
+<body marginwidth="0" marginheight="0">
+<script type="text/javascript" charset="utf-8">
+/**
+ * V return libs.
+ * 2016.02.03 17:12:03
+ * Copyright© 2014-2016 ValueMaker All Rights Reserved.
+ */
+!function(a,b,c){var d;d=function(){var c,d,e="[PROJECT_NAME]",f="postMessage"in b;return c=function(){function a(a,b,c){var d="";if(arguments.length<2?d="target error - target and name are both required":"object"!=typeof a?d="target error - target itself must be window object":"string"!=typeof b&&(d="target error - target name must be string type"),d)throw new Error(d);this.target=a,this.name=b,this.prefix=c}return f?a.prototype.send=function(a){this.target.postMessage(this.prefix+"|"+this.name+"__Messenger__"+a,"*")}:a.prototype.send=function(a){var c=b.navigator[this.prefix+this.name];if("function"!=typeof c)throw new Error("target callback function is not defined");c(this.prefix+"|"+this.name+"__Messenger__"+a,b)},a}(),d=function(){function d(a,b,c){this.targets={},this.name=a,this.listenFunc=[],this.prefix=b||e,c||this.initListen()}return d.prototype.addTarget=function(a,b){var d=new c(a,b,this.prefix);this.targets[b]=d},d.prototype.initListen=function(){var c=this,d=a.trafficControlCall,e=function(a){"object"==typeof a&&a.data&&(a=a.data);for(var b=a.split("__Messenger__"),a=b[1],d=b[0].split("|"),e=d[0],f=(d[1],0);f<c.listenFunc.length;f++)e===c.prefix&&c.listenFunc[f](a)};f?d||(a.trafficControlCall=!0,"addEventListener"in document?b.addEventListener("message",e,!1):"attachEvent"in document&&b.attachEvent("onmessage",e)):b.navigator[this.prefix+this.name]=e},d.prototype.listen=function(a){for(var b=0,c=this.listenFunc.length,d=!1;c>b;b++)if(this.listenFunc[b]==a){d=!0;break}d||this.listenFunc.push(a)},d.prototype.clear=function(){this.listenFunc=[]},d.prototype.send=function(a){var b,c=this.targets;for(b in c)c.hasOwnProperty(b)&&c[b].send(a)},d}()}(),a.messenger=a.messenger||d}(window.Vamaker=window.Vamaker||{},"undefined"!=typeof window?window:this),function(a,b,c){var d,e,f;d=a||b.Vamaker,e=d.messenger,f=function(a){var c,d=new RegExp("(^|&)"+a+"=([^&]*)(&|$)");return c=b.location.search.substr(1).match(d),null!==c?unescape(c[2]):null};var g,h,i,j,k,l;switch(g=f("vmads")||"0000000000",h=b.parseInt(f("origin"),10)||2,j=f("type")||"1",k=f("callback")||"vm_return_callback_"+g,l=f("destroy")||"0",i="",h){case 2:i=b.parent.parent;break;case 3:i=b.parent.parent.parent;break;case 4:i=b.parent.parent.parent.parent;break;case 5:i=b.parent.parent.parent.parent.parent;break;case 6:i=b.parent.parent.parent.parent.parent.parent;break;case 7:i=b.parent.parent.parent.parent.parent.parent.parent;break;case 8:i=b.parent.parent.parent.parent.parent.parent.parent.parent;break;default:i=b.parent.parent}var m,n=[],o="";n.push(j),n.push(g),"2"===j&&n.push(k),"0"!==l&&n.push(l),o=n.join(","),m=new e("vamakerTrafficControl_"+g,"ValueMaker",!0),m.addTarget(i,"vamakerTrafficControl_"+g),m.send(o)}(window.Vamaker=window.Vamaker||{},"undefined"!=typeof window?window:this);
+</script>
+
+
+</body></html>

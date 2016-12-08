@@ -1,0 +1,130 @@
+(function(doc,win){
+	var loginLayer = win.SINA_OUTLOGIN_LAYER,
+        _ = loginLayer.STK,
+        urlHost = 'http://' + window.location.host;
+    win.isIpad = /(iPad|iPod)/i.test(navigator.userAgent);
+	var TechIndex = function(){
+        this.selectBox=_.E('selectBox');
+		this.number = 0;
+		this._init();
+	}
+	TechIndex.prototype = {
+		// body...
+		_scriptOnload: doc.createElement('script').readyState ?
+            function(node, callback) {
+                var oldCallback = node.onreadystatechange;
+                node.onreadystatechange = function() {
+                    var rs = node.readyState;
+                    if (rs === 'loaded' || rs === 'complete') {
+                        node.onreadystatechange = null;
+                        oldCallback && oldCallback();
+                        callback.call(this);
+                    }
+                };
+            } : function(node, callback) {
+                node.addEventListener('load', callback, false);
+            },
+        head: doc.getElementsByTagName('head')[0] || doc.documentElement,
+        _getScript: function(url, fn) {
+            var node = doc.createElement('script'),
+                head = this.head;
+            node.src = url;
+            node.async = true;
+            this._scriptOnload(node, function() {
+                fn && fn.call(node, '');
+                if (head && node.parentNode) {
+                    head.removeChild(node);
+                }
+            });
+            head.insertBefore(node, head.firstChild);
+            return node;
+        },
+        _getData: function(url, fn, cn) {
+            var me = this;
+            var date = new Date();
+            me._dataCallbackName = cn + date.getSeconds();
+            win[me._dataCallbackName] = function(data) {
+                if (fn) {
+                    fn(data);
+                }
+            };
+            //if (tag) var nowUrl = url + '&jsoncallback=' + me._dataCallbackName;
+            //else 
+            var nowUrl = url + '&callback=' + me._dataCallbackName;
+            me._getScript(nowUrl);
+        },
+        _class: function(searchClass, node, tag) {
+            var classElements = [],
+                els, elsLen, pattern;
+            if (node == null) node = doc.body;
+            if (tag == null) tag = '*';
+            if (node.getElementsByClassName) {
+                return node.getElementsByClassName(searchClass);
+            }
+            if (node.querySelectorAll) {
+                return node.querySelectorAll('.' + searchClass);
+            }
+            els = node.getElementsByTagName(tag);
+            elsLen = els.length;
+            pattern = new RegExp("(^|\\s)" + searchClass + "(\\s|$)");
+            for (i = 0, j = 0; i < elsLen; i++) {
+                if (pattern.test(els[i].className)) {
+                    classElements[j] = els[i];
+                    j++;
+                }
+            }
+            return classElements;
+        },
+        _selectDiv:function(){
+            var selectDiv=document.getElementById('type1SelectView'),
+                selectList=this._class('ds_list',selectDiv,'div')[0];
+            selectDiv.onmouseover=function(){
+                selectList.style.display='block';
+            }
+            selectDiv.onmouseout=function(){
+                selectList.style.display='none';
+            }
+        },
+        _welTip:function(){
+            function setCookie(name,value)
+            {
+                var Days = 30;
+                var exp = new Date();
+                exp.setTime(exp.getTime() + Days*24*60*60*1000);
+                document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString()+";path=/";
+            }
+            function getCookie(name)
+            {
+                var arr,reg=new RegExp("(^| )"+name+"=([^;]*)(;|$)");
+                if(arr=document.cookie.match(reg))
+                return unescape(arr[2]);
+                else return null;
+            }
+            function delCookie(name)
+            {
+                var exp = new Date();
+                exp.setTime(exp.getTime() - 1);
+                var cval=getCookie(name);
+                if(cval!=null) document.cookie= name + "="+cval+";expires="+exp.toGMTString()+";path=/";
+            }
+            var welDiv = _.E('welDiv'),
+                welClose = _.E('welClose'),
+                welTipClick = getCookie('welTipClick');
+            if(welTipClick) welDiv.style.display="none";
+            else{
+                welDiv.style.display="block";
+            }
+            _.addEvent(welClose,'click',function(){
+                welDiv.style.display="none";
+                setCookie('welTipClick','true');
+            })
+        },
+        _init : function(){
+            var that=this;
+            var welDiv = _.E('welDiv');
+            that._selectDiv();
+            if(welDiv) that._welTip();
+        }
+	};
+	var techIndex = new TechIndex();
+})(document,window);

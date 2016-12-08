@@ -1,0 +1,261 @@
+//婵炴惌鍠栭惇鎵偓鐢殿攰閽栵拷
+var xtBox = new Object();
+xtBox.h = 0;
+xtBox.hFrame = 400;
+xtBox.isShow = 0;
+xtBox.topNumx = 0;
+
+	/*************婵炴惌鍠栭惇浼寸嵁閸喗鍟為柟绗涘棭鏀�***********
+	*/
+	//闂佹澘绉堕悿鍡樼┍閳╁啩绱�
+	xtBox.height1 = (typeof(adInfoTempXt.height1)=="undefined")?400:adInfoTempXt.height;
+	xtBox.width1 = (typeof(adInfoTempXt.width1)=="undefined")?960:adInfoTempXt.width;
+	if(!adInfoTempXt.index)
+	{
+		xtBox.height2 = (typeof(adInfoTempXt.height2)=="undefined")?270:adInfoTempXt.height2;
+		xtBox.width2 = (typeof(adInfoTempXt.width2)=="undefined")?20:adInfoTempXt.width2;
+	}else
+	{
+		xtBox.height2 = (typeof(adInfoTempXt.height2)=="undefined")?270:adInfoTempXt.height2;
+		xtBox.width2 = (typeof(adInfoTempXt.width2)=="undefined")?20:adInfoTempXt.width2;
+		xtBox.height3 = (typeof(adInfoTempXt.height3)=="undefined")?270:adInfoTempXt.height3;
+		xtBox.width3 = (typeof(adInfoTempXt.width3)=="undefined")?20:adInfoTempXt.width3;
+	}
+	xtBox.src1 = (typeof(adInfoTempXt.src1)=="undefined")?0:adInfoTempXt.src1;
+	xtBox.src2 = (typeof(adInfoTempXt.src2)=="undefined")?0:adInfoTempXt.src2;
+	xtBox.src3 = xtBox.src2;
+	xtBox.url = (typeof(adInfoTempXt.url)=="undefined")?"http://163.com":adInfoTempXt.url;
+	xtBox.key = (typeof(adInfoTempXt.key)=="undefined")?"xtkey":adInfoTempXt.key;
+	xtBox.time = (typeof(adInfoTempXt.time)=="undefined")?8000:adInfoTempXt.time;
+	xtBox.adBoxJs = (typeof(adInfoTempXt.adBoxJs)=="undefined")?"http://img2.126.net/ntesrich/auto/adbox/adbox-v1.1.2-120705.js":adInfoTempXt.adBoxJs;
+
+	if(isNs9 == false){
+		xtBox.width1 = 1200;
+	}else{
+		xtBox.width1 = 960;
+	}
+	xtBox.hFrame = 400;
+	xtBox.cookieTime = 2;
+	//闁汇垻鍠愰崹姘剁嵁閸喗鍟�
+	xtBox.createElement = function()
+	{
+		//闁汇垻鍠愰崹姘▔鐠囪尙鐣柛娑虫嫹
+		//濮掓稒顭堥锟�960*400
+		document.body.insertAdjacentHTML("afterBegin","<div id='xtMainDiv' style='height:400px; width:"+this.width1+"px; display:none; margin-top:45px;overflow:hidden;'></div>");
+		this.xtMainDiv = document.getElementById("xtMainDiv");
+		
+		this.mainDiv = adBox.createDiv(this.width1,this.height1);
+		this.mainDiv.overflow = "hidden";
+		this.mainStr = "<div style=\"height:400px; width:"+this.width1+"px; overflow:hidden;position:relative;\"><div id=\"xtMovieFrame\" style=\"height:400px; width:1200px;position:absolute;left:50%;margin-left:-600px;top:0;\"></div><div id=\"xtClick\" onclick=\"xtBox.getURL()\" style=\"height:400px; width:100%; background:#FC6; cursor:pointer; position:absolute; top:0px;left:0;filter:alpha(opacity=0); opacity:0; \"></div><div id=\"xtClose\" onclick=\"xtBox.action('close')\" style=\"position:absolute; bottom:-1px; right:-1px; cursor:pointer;\"><img style=\"vertical-align:middle\" src=\"http://img2.126.net/ntesrich/2015/0831/xt_close.png\"/></div></div>"
+		this.mainDiv.innerHTML = this.mainStr;
+		this.mainFrame = document.getElementById("xtMovieFrame");
+		this.mainFrame.innerHTML = adBox.createSwf("xtMainMovie",1200,this.height1,this.src1);
+		this.mainDiv.style.display = "none";
+		this.mainDiv.style.zIndex=999;
+		
+		//replay right
+		this.replayDivR = adBox.createDiv(this.width2,this.height2);
+		this.replayStrR = "<div id=\"xtReplayFrameR\" style=\"width:20px; height:"+this.height2+"px;\"></div><div id=\"xtClickR\" onclick=\"xtBox.getURL()\" style=\"width:20px; height:"+this.height2+"px; background:#0CC; position:relative; left:0; top:-"+this.height2+"px; cursor:pointer; filter:alpha(opacity=0); opacity:0;\"></div><div id=\"xtReplayR\" onclick=\"xtBox.action('show')\" style=\"width:20px; height:40px; background:#C99; position:relative; left:0; top:-"+(this.height2+40)+"px; cursor:pointer; filter:alpha(opacity=0); opacity:0;\"></div>";
+		this.replayDivR.innerHTML = this.replayStrR;
+		this.replayFrameR = document.getElementById("xtReplayFrameR");
+		this.replayFrameR.innerHTML = adBox.createSwf("xtReplayMovieR",this.width2,this.height2,this.src2);
+		this.replayDivR.style.zIndex=9999;
+		this.replayDivR.style.display = "none";
+		//replay left
+		//闁告帇鍊栭弻鍥及椤栨碍鍎婂Λ锝嗙墵閵嗗骞庨弴鐔告澒
+		if(adInfoTempXt.index)
+		{
+			this.hFrame = 445;
+		}
+	}
+	//閻犱礁澧介悿鍡樻媴瀹ュ洨鏋�
+	xtBox.reSetPosition = function()
+	{
+		//闁告帇鍊栭弻鍥及椤栨碍鍎婇悘蹇撶箰閸ㄥ孩娼忛妸褍鑺�
+		this.toTop = (adInfoTempXt.index)?540:690;
+		if(adBox.getClientInfo("height") <= this.toTop)
+		{
+			if(adBox.getClientInfo("top") >= 200)
+			{
+				this.dTop = 0;
+			}else
+			{
+				
+				this.dTop = this.toTop - adBox.getClientInfo("height");
+				
+			}
+		}else
+		{
+			this.dTop = 0;
+		}
+		//婵炴潙绻楅～宥夊闯閵娧嗩潶闁割煉鎷�
+		if(this.broswer == "ie6")
+		{
+			//濞戞挾绮弸鍐╃鐠鸿櫣鏆板ù锝忔嫹
+			this.mainDiv.style.position =
+			this.replayDivR.style.position = "absolute";
+			this.mainDiv.style.left = adBox.getClientInfo("width")/2 - this.width1/2 + "px";
+
+			this.mainDiv.style.top = this.hFrame - 400 + this.topNumx + "px";
+			this.replayDivR.style.left = adBox.getClientInfo("width") - this.width2 + "px";
+			this.replayDivR.style.top = this.dTop + adBox.getClientInfo("top") + adBox.getClientInfo("height") - this.height2 + "px";
+			
+		}else
+		{
+			//濞戞挾绮弸鍐╃鐠鸿櫣鏆板ù锝忔嫹
+			this.mainDiv.style.position = "absolute";
+			this.replayDivR.style.position = "fixed";
+			this.mainDiv.style.left = adBox.getClientInfo("width")/2 - this.width1/2 + "px";
+			this.mainDiv.style.top = this.hFrame - 400 + this.topNumx + "px";
+			this.replayDivR.style.left = adBox.getClientInfo("width") - this.width2 + "px";
+			this.replayDivR.style.top = this.dTop + adBox.getClientInfo("height") - this.height2 + "px";
+		}
+		this.reSetPositionNum = setTimeout("xtBox.reSetPosition()",1000);
+	}
+	//濞戞挸顑嗙敮褰掑礉閵娧勬毎
+	xtBox.an = function(code)
+	{
+		if(code == "show")
+		{
+			this.h += 7;
+			if(this.h >= this.hFrame)
+			{
+				//闁哄嫬澧介妵姘▔鐠囨彃袟闁活澁鎷�
+				this.mainDiv.innerHTML = this.mainStr;
+				this.mainFrame = document.getElementById("xtMovieFrame");
+				this.mainFrame.innerHTML = adBox.createSwf("xtMainMovie",1200,this.height1,this.src1);
+				this.mainDiv.style.display = "block";
+				this.time8Num = setTimeout("xtBox.action('close')",this.time);
+				this.h = this.hFrame>=400?400:this.hFrame;
+				//闁告帇鍊栭弻鍥及椤栨碍鍎婇悗娑櫭﹢顏呮償閺囩姵鐫�
+				clearTimeout(this.anNum);
+			}else
+			{
+				this.anNum = setTimeout("xtBox.an('show')",15);
+			}
+		}else
+		{
+			this.h += -1*8;
+			if(this.h<=0)
+			{
+				this.h = 0;
+				this.xtMainDiv.style.display = "none";
+				document.getElementById("xtReplayR").onclick = function(){xtBox.action('show');}
+				//闁告帇鍊栭弻鍥及椤栨碍鍎婇悗娑櫭﹢顏呮償閺囩姵鐫�
+				clearTimeout(this.anNum);
+			}else
+			{
+				this.anNum = setTimeout("xtBox.an('close')",15);
+			}
+		}
+		var tempH = this.h<0?0:this.h;
+		this.xtMainDiv.style.height = tempH +"px";
+	}
+	//濞存嚎鍊撶花锟�
+	xtBox.action = function(code)
+	{
+		if(typeof(this.isFirst)=="undefined")
+		{
+			this.isFirst = 1;
+			this.cookie = adBox.cookieCount(this.key);
+		}
+		if(((code == "first")&&((this.cookie<=this.cookieTime)))||(code=="show"))
+		{
+			//闂傚懏鍔樺Λ宀勬煂瀹ュ棙灏�
+			this.replayDivR.innerHTML = "";
+			this.replayDivR.style.display = "none";
+			//鐎殿喒鍋撳┑顔碱儎缁楀懘骞掗妸銉バ楅柣顫嫹
+			this.xtMainDiv.style.display = "block";
+			this.h = 0;
+			this.an("show");
+			//闁告帇鍊栭弻鍥及椤栨碍鍎婇悗娑櫭﹢顏呮償閺囩姵鐫忔鐐茬仢閹诧拷
+			//this.checkIsDw("none");
+		}else if(((code == "first")&&((this.cookie>this.cookieTime)))||(code=="close"))
+		{
+			//闂傚懏鍔樺Λ灞剧▔鐠囨彃袟闁活澁鎷�
+			this.mainDiv.innerHTML = "";
+			this.mainDiv.style.display = "none";
+			//闁哄嫬澧介妵姘舵煂瀹ュ棙灏�
+			this.replayDivR.innerHTML = this.replayStrR;
+			this.replayFrameR = document.getElementById("xtReplayFrameR");
+			this.replayFrameR.innerHTML = adBox.createSwf("xtReplayMovieR",this.width2,this.height2,this.src2);
+			this.replayDivR.style.display = "block";
+			clearTimeout(this.time8Num);
+			//鐎殿喒鍋撳┑顔碱儎缁楀倿骞掗敓锟�
+			if(code=="close")
+			{
+				this.h = this.hFrame;
+				this.an("close");
+				//閻忕偛绻楅弬鈧梺鎻掔У閹歌鲸绂嶇€ｂ晜顐�
+				document.getElementById("xtReplayR").onclick = function(){}
+			}
+
+			//閻犲鍟伴弫銈囩箔椤戣法鐧屾慨濠庡灦濡诧拷
+			//alert("濞戞挸顑嗙敮瑙勭▔鐠囨彃袟闁圭虎鍘介弬渚€鐛幆閭︽蕉闁稿繑濞婂Λ纾濞戞挸绉烽崵婊堝礉閵婏附灏￠柡鈧敓锟�");
+			if(typeof(adCindex) != "undefined")
+			{
+				adCindex.go(2);
+			}
+		}
+	}
+	
+	//闁告帇鍊栭弻鍥礉閻樼儤绁伴弶鈺傜☉鐎癸拷
+	xtBox.checkPross = function()
+	{
+		if((this.broswer == "ff")||(this.broswer == "chr"))
+		{
+			this.checkPorssNum = setTimeout("xtBox.action('first')",1000);
+		}else if(adBox.swfLoadPross(["xtMainMovie","xtReplayMovieR"]))
+		{
+			this.action("first");
+		}else
+		{
+			this.checkPorssNum = setTimeout("xtBox.checkPross()",1000);
+		}
+	}
+	//闁瑰灚鎸哥槐鎴︽煣閻愵剙澶�
+	xtBox.getURL = function()
+	{
+		window.open(this.url,"_blank");
+	}
+	//缂備胶鍘ч幃搴ｆ嫬閸愵亝鏆�
+	xtBox.createAD = function()
+	{
+		if(xtBox.isShow == 0)
+		{
+			//闁汇垻鍠愰崹姘跺礂閸愵亞顦�
+			this.createElement();
+			//閻犱礁澧介悿鍡樻媴瀹ュ洨鏋�
+			this.reSetPosition();
+			//闁告梻濮惧ù鍥ㄦ交濞戞ê顔�
+			this.checkPross();
+
+			xtBox.isShow = 1;
+		}
+	}
+	//闁圭瑳鍡╂斀
+	xtBox.go = function()
+	{
+		if(typeof(adBox) == "undefined")
+		{
+			//閻庣數鍘ч崣鍝竏box
+			document.write("<script language=\"JavaScript\" src=\""+xtBox.adBoxJs+"\"></script>");
+			this.check = function()
+			{
+				if(typeof(adBox)=="undefined")
+				{
+					xtBox.checkNum = setTimeout("xtBox.check()",1000);
+				}else
+				{
+					//鐎殿喒鍋撳┑顔碱儐婢х晫鎮伴敓锟�
+					clearTimeout(xtBox.checkNum);
+					xtBox.createAD();
+				}
+			}
+			this.check();
+		}else
+		{
+			this.createAD();
+		}
+	}
+	// xtBox.go();

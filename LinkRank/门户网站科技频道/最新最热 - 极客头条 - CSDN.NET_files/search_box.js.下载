@@ -1,0 +1,47 @@
+/**
+ * Created by liwz on 2015-5-13.
+ */
+$(function(){
+    $("#search_nav").click(function()
+    {
+        var $search_nav = $("#search_nav");
+        if(!$search_nav.is("animated"))
+        {
+            $(this).animate({right:'40px'},500);
+            $(this).siblings('input').focus();
+        }
+        /*
+        $(this).siblings(".search_input").css({
+            'width':'100%',
+            'opacity':1
+        }).end().siblings(".fa-close").show(500);
+        */
+        var keyword = $('#keyword').val().trim();
+        if (keyword){
+            location.href= "/search/" + keyword;
+        }
+    });
+    $("#search_close").click(function()
+    {
+        $('#keyword').val('');
+        $(this).siblings(".search_input").css({
+            'width':'2px',
+            'opacity':0
+        });
+        $(this).hide()
+            .siblings("#search_nav").css({
+                'right':'10px'
+            });
+    });
+    //搜索
+    $('#keyword').bind("keydown", function (e) {
+        var _val = $( this ).val().trim();
+        if(e.keyCode == 13){
+            if(_val == ""){
+                return false;
+            }else{
+                window.location.href = "/search/" + _val;
+            }
+        }
+    });
+});

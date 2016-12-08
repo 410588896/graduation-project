@@ -1,0 +1,1900 @@
+"undefined" == typeof SA && (SA = function() {
+    var b = {},
+    a = [],
+    c = [],
+    g = jQuery;
+    b.inc = function() {
+        return ! 0
+    };
+    b.register = function(e, f) {
+        for (var h = e.split("."), j = b, k = null; k = h.shift();) if (h.length) void 0 === j[k] && (j[k] = {}),
+        j = j[k];
+        else if (void 0 === j[k]) try {
+            j[k] = f(b, g),
+            c.push(e)
+        } catch(l) {
+            a.push(["SA.register", (new Date).getTime(), l])
+        }
+    };
+    b.unregister = function(a) {
+        if ("core" === a.split(".")[0]) return ! 1;
+        for (var b = 0,
+        g = c.length; b < g; b += 1) if (c[b] === a) return c[b] = null,
+        c.splice(b, 1),
+        !0;
+        return ! 1
+    };
+    b.checkRegister = function(a) {
+        for (var b = 0,
+        g = c.length; b < g; b += 1) if (c[b] === a) return ! 0;
+        return ! 1
+    };
+    b.regShort = function(a, c) {
+        if (void 0 !== b[a]) throw "[" + a + "] : short : has been register";
+        b[a] = c
+    };
+    b.log = function(c, g, h, j) {
+        c = [c, h || "error", g || "system", j || (new Date).getTime()];
+        a.push(c);
+        if (b.DEBUG) try {
+            console.log(c)
+        } catch(k) {}
+    };
+    b.getLogList = function(c) {
+        return a.splice(0, c || a.length)
+    };
+    b.IE = g.browser.msie;
+    return b
+} ());
+SA.DEBUG = 0;
+SA.global = this;
+SA.register("empty",function() {
+    return function() {}
+});
+SA.register("util.getUniqueKey",function() {
+    var b = (new Date).getTime().toString(),
+    a = 1;
+    return function() {
+        return b + a++
+    }
+});
+SA.register("util.cookie",function() {
+    var b = {
+        set: function(a, c, b) {
+            var e = [];
+            b = $.extend({},
+            {
+                expire: null,
+                path: "/",
+                domain: null,
+                secure: null,
+                encode: !0
+            },
+            b); ! 0 == b.encode && (c = escape(c));
+            e.push(a + "=" + c);
+            null != b.path && e.push("path=" + b.path);
+            null != b.domain && e.push("domain=" + b.domain);
+            null != b.secure && e.push(b.secure);
+            null != b.expire && (a = new Date, c = a.getTime() + 36E5 * b.expire, a.setTime(c), e.push("expires=" + a.toGMTString()));
+            document.cookie = e.join(";")
+        },
+        get: function(a) {
+            a = a.replace(/([\.\[\]\$])/g, "\\$1");
+            return (a = (document.cookie + ";").match(RegExp(a + "=([^;]*)?;", "i"))) ? a[1] || "": ""
+        },
+        remove: function(a, c) {
+            c = c || {};
+            c.expire = -10;
+            b.set(a, "", c)
+        }
+    };
+    return b
+});
+SA.register("scriptLoader",function(b, a) {
+    var c = {},
+    g = {
+        url: "",
+        charset: "gb2312",
+        timeout: 3E4,
+        onComplete: b.empty,
+        onTimeout: b.empty,
+        isEncode: !1,
+        uniqueID: null
+    };
+    return function(e) {
+        var f, h, j = a.extend({},
+        g, e);
+        if ("" == j.url) throw "scriptLoader: url is null";
+        d = j.uniqueID || b.util.getUniqueKey();
+        f = c[d];
+        null != f && !0 != b.IE && (a(f).remove(), f = null);
+        null == f && (f = c[d] = document.createElement("script"));
+        f.charset = j.charset;
+        f.id = "scriptRequest_script_" + d;
+        f.type = "text/javascript";
+        null != j.onComplete && (b.IE ? f.onreadystatechange = function() {
+            if ("loaded" == f.readyState.toLowerCase() || "complete" == f.readyState.toLowerCase()) {
+                try {
+                    clearTimeout(h),
+                    document.getElementsByTagName("head")[0].removeChild(f),
+                    f.onreadystatechange = null
+                } catch(a) {}
+                j.onComplete()
+            }
+        }: f.onload = function() {
+            try {
+                clearTimeout(h),
+                a(f).remove()
+            } catch(c) {}
+            j.onComplete()
+        });
+        f.src = j.url;
+        document.getElementsByTagName("head")[0].appendChild(f);
+        0 < j.timeout && (h = setTimeout(function() {
+            try {
+                document.getElementsByTagName("head")[0].removeChild(f)
+            } catch(a) {}
+            j.onTimeout()
+        },
+        j.timeout));
+        return f
+    }
+});
+SA.register("util.statsTime",function(b, a) {
+    window.__GLOBAL_STATS_PAGESTART_TIME__ = $ENV.beginTime;
+    a(window).ready(function() {
+        window.__GLOBAL_STATS_DOMREADY_TIME__ = (new Date).getTime()
+    });
+    a(window).load(function() {
+        window.__GLOBAL_STATS_PAGEONLOAD_TIME__ = (new Date).getTime()
+    })
+});
+SA.register("trim",function() {
+    return function(b) {
+        if ("string" != typeof b) throw "trim need a string as parameter";
+        for (var a = b.length,
+        c = 0,
+        g = /(\u3000|\s|\t|\u00A0)/; c < a && g.test(b.charAt(c));) c += 1;
+        for (; a > c && g.test(b.charAt(a - 1));) a -= 1;
+        return b.slice(c, a)
+    }
+});
+SA.register("templet",function() {
+    return function(b, a) {
+        return b.replace(/\$\{(.+?)\}/ig,
+        function(c, b) {
+            for (var e = b.replace(/\s/ig, ""), f = c, e = e.split("||"), h = 0, j = e.length; h < j; h += 1) {
+                if (/^default:.*$/.test(e[h])) {
+                    f = e[h].replace(/^default:/, "");
+                    break
+                }
+                if (void 0 !== a[e[h]]) {
+                    f = a[e[h]];
+                    break
+                }
+            }
+            return f
+        })
+    }
+});
+SA.register("ui.tab",function(c, b) {
+    function a(a) {
+        this.option = b.extend({},
+        f, a);
+        var c = this;
+        a = this.option;
+        this.tabs = b(a.t).children();
+        this.contents = b(a.c).children();
+        this.index = a.look ? this.tabs.index(this.tabs.filter("." + this.option.className)) : 0;
+        this.currentTab = this.tabs.eq(this.index);
+        this.currentContent = this.contents.eq(this.index);
+        this.time = null;
+        "hover" == a.eventType ? this.tabs.mouseover(function() {
+            c.time && clearTimeout(c.time);
+            var a = this;
+            c.time = setTimeout(function() {
+                c.change(a)
+            },
+            e)
+        }).mouseout(function() {
+            clearTimeout(c.time)
+        }) : "click" == a.eventType && this.tabs.click(function() {
+            c.change(this)
+        })
+    }
+    var e = 100,
+    f = {
+        t: "",
+        c: "",
+        look: !1,
+        callBack: c.empty,
+        eventType: "hover",
+        className: "now"
+    };
+    a.prototype = {
+        change: function(a) {
+            a = this.tabs.index(a);
+            a != this.index && (this.index = a, this.currentTab && this.currentTab.removeClass(this.option.className), this.currentTab = this.tabs.eq(a).addClass(this.option.className), this.currentContent && this.currentContent.hide(), this.currentContent = this.contents.eq(a).show(), "function" == typeof this.option.callBack && this.option.callBack(a))
+        }
+    };
+    return a
+});
+SA.register("ui.placeholder",function(b, a) {
+    return function(c, g) {
+        var e = a(c);
+        e.focus(function() {
+            b.trim(e.val()) == g && e.val("")
+        }).blur(function() {
+            "" == b.trim(e.val()) && e.val(g)
+        })
+    }
+});
+SA.register("app.search", function(b, a) {
+    var c = {},
+    g = {
+        url: "http://search.auto.sohu.com/suggest.jhtml?func=${callBack}&kw=${kw}&t=${time}",
+        inputSelect: "#app-search-text",
+        listSelect: "#app-search-suggest",
+        formSelect: "#app-search-form",
+        onSubmit: function() {
+            return ! 0
+        },
+        text: "\u8f93\u5165\u5173\u952e\u5b57"
+    },
+    e = function(a) {
+        this.$script = this.$list = this.$input = null;
+        this.lastKeyword = "";
+        this.cache = c;
+        this.option = {};
+        this.callBackName = null;
+        this.init(a)
+    },
+    f = 0;
+    e.callBack = {};
+    e.prototype = {
+        init: function(c) {
+            this.option = a.extend({},
+            g, c);
+            this.$input = a(this.option.inputSelect);
+            this.$list = a(this.option.listSelect);
+            this.$form = a(this.option.formSelect);
+            new SA.ui.placeholder(this.$input[0], this.option.text);
+            var j = this,
+            k;
+            f++;
+            this.callBackName = "SA.app.search.callBack[" + f + "]";
+            e.callBack[f] = function(a) {
+                j.callBack(a)
+            };
+            this.$input.keyup(function(a) {
+                var c = b.trim(j.$input.val());
+                "" == c ? j.$list.hide() : 38 == a.keyCode ? j.changeList( - 1) : 40 == a.keyCode ? j.changeList(1) : (j.lastKeyword = c, j.cache[c] ? j.draw() : (k && clearTimeout(k), k = setTimeout(function() {
+                    j.getData()
+                },
+                10)))
+            });
+            this.$input.focusout(function() {
+                setTimeout(function() {
+                    j.$list.hide()
+                },
+                100)
+            });
+            this.$input.focus(function() {
+                a(this).val("")
+            });
+            this.$form.submit(function() {
+                return j.option.onSubmit(j.lastKeyword, j)
+            })
+        },
+        changeList: function(a) {
+            if (!this.$list.is(":hidden")) {
+                var c = this.$list,
+                b = this.option.list;
+                b.index += a; - 1 > b.index ? b.index = b.total - 1 : b.index >= b.total && (b.index = -1);
+                c.children().removeClass("now"); - 1 == b.index ? this.$input.val(this.lastKeyword) : (txt = c.children().eq(b.index).addClass("now").text(), this.$input.val(txt))
+            }
+        },
+        draw: function() {
+            var c = this,
+            b = this.$list,
+            g = this.cache[this.lastKeyword];
+            if (0 == g.length) b.hide();
+            else {
+                b.html("");
+                for (var e = 0,
+                f = g.length; e < f; e++) $li = a("<li>" + g[e] + "</li>"),
+                b.append($li),
+                $li.hover(function() {
+                    a(this).addClass("now")
+                },
+                function() {
+                    a(this).removeClass("now")
+                }).click(function() {
+                    c.$input.val(a(this).text())
+                });
+                b.show();
+                this.option.list = {
+                    index: -1,
+                    total: g.length
+                }
+            }
+        },
+        callBack: function(a) {
+            this.cache[a.kw] = a.s;
+            this.lastKeyword == a.kw && this.draw()
+        },
+        getData: function() {
+            var c = b.templet(this.option.url, {
+                callBack: this.callBackName,
+                kw: this.lastKeyword,
+                time: (new Date).getTime()
+            });
+            this.$script && this.$script.remove();
+            this.$script = a("<script />").attr("src", c).appendTo("body")
+        }
+    };
+    return e
+});
+
+
+//品牌类
+SA.register("auto.brands", function (a, $) {
+	var Data, View,
+	BMlist = [],
+	bmDataLoaded = false,
+	load = false,
+	Config = {
+		url : "http://db.auto.sohu.com/attachment/js/new_brand.js"//
+	},
+	dataLoaded = function () {
+		Data.dataBM = window.brandMods;
+		for (var i = 0, j = BMlist.length; i < j; i++) {
+			try {
+				BMlist[i].init()
+			} catch (e) {}
+
+		}
+	},
+	loadBMScript = function () {
+		if (!load) {
+			load = true;
+			a.scriptLoader({
+				url : Config.url,
+				onComplete : function () {
+					bmDataLoaded = true;
+					dataLoaded()
+				}
+			})
+		}
+	};
+	Data = {
+		dataBM: brandMods,
+		brands : [],
+		models : [],
+		hots : [],
+		brandsHTML : '',
+		/*getbm : function (arr){
+			var k = this;
+			var ch =/[a-zA-Z]{1}/;
+			for(var i=0, len =arr.length;i<len;i++){
+				var str = arr[i].n;
+				var c = ch.exec(str);
+				var s = String(c);
+				var n = str.replace(s, '');
+				if(!k.brands[c]){
+					k.brands[c] = [];
+				}
+				//console.log(i);
+				k.brands[c].push({i:arr[i].i,n:n});
+				k.models[arr[i].i] = arr[i].s;
+			}
+		},*/
+		getBrandsAndModels : function (ds) {
+			var k = this,
+				hotDatas = ds.hotbrands,
+				dataList = ds.brandlist,
+				tempChar = '',
+				tempBrands = null,
+				tempb = null,
+				bArr = [],
+				cArr = [];
+			for (var i=0,len= hotDatas.length; i<len; i++) {
+				k.hots.push(hotDatas[i]);
+			}
+			for(var j=0,l=dataList.length;j<l; j++){
+				tempChar = dataList[j].cap;
+				tempBrands = dataList[j].list;
+				for(var x = 0, xl = tempBrands.length; x < xl; x++){
+					tempb = tempBrands[x];
+					bArr.push(tempb);
+					k.models[tempb.i] = tempb.s;
+				}
+				k.brands.push({c:tempChar,brands:bArr});
+				bArr = [];
+			}
+		}
+	};
+	View = {
+		/*drawBrands1: function (layer, hot, data) {
+			if(Data.brandsHTML){
+				layer.html(Data.brandsHTML);
+				return;
+			}
+			var html = [];
+			for( c in data){
+				html.push('<p><strong>'+c.toUpperCase() +'</strong>');
+				var arr = data[c];
+				for(var x=0,l=arr.length;x<l;x++){
+					html.push('<a  href="javascript:;" data-index="'+arr[x].i+'">'+arr[x].n+'</a>');
+				}
+				html.push('</p>');
+			}
+			layer.html(html.join(''));
+			Data.brandsHTML = html.join('');
+			html = [];
+		},*/
+		drawBrands: function (layer, hot, data) {
+			if(Data.brandsHTML){
+				layer.html(Data.brandsHTML);
+				return;
+			}
+			var html = [],
+				len = data.length,
+				hlen = hot.length,
+				tempArr = null;
+			html.push('<p class="rmode">热门：');
+			for(var i = 0; i < hlen; i++){
+				html.push('<a  href="javascript:;" data-index="'+hot[i].i+'">'+hot[i].n+'</a>');
+			}
+			
+			html.push('</p>');
+			for(var j = 0; j < len; j++){
+				tempArr = data[j].brands;
+				html.push('<p><strong>'+data[j].c.toUpperCase() +'</strong>');
+				for(var x = 0,blen = tempArr.length; x<blen; x++){
+					html.push('<a  href="javascript:;" data-index="'+tempArr[x].i+'">'+tempArr[x].n+'</a>');
+				}
+				html.push('</p>');
+			}
+			
+			layer.html(html.join(''));
+			Data.brandsHTML = html.join('');
+			html = [];
+			tempArr = null;
+		},
+		drawModels: function (layer, data){
+			var len = data.length,
+			tempArr = null,
+			$ul = layer.find('.sellist'),
+			html = [];
+			for (var i=0;i<len;i++) {
+				tempArr = data[i].b;
+				html.push('<li class="th"><a  href="javascript:;">'+data[i].n+'</a></li>');
+				for(var x =0,blen=tempArr.length;x < blen; x++){
+					html.push('<li><a data-index="'+tempArr[x].i+'" href="javascript:;">'+tempArr[x].n+'</a></li>');
+				}
+			}
+			$ul.html(html.join(''));
+			setTimeout(function(){
+				if(layer.height() < 262){
+					layer.css('height','auto');
+				} else {
+					layer.css('height','262px');
+				}
+			},500);
+		}
+	};
+	var BM = function(opt){
+		this.option = opt;
+		this.elBrand = null;
+		this.elModel = null;
+		this.selBrand = null;
+		this.layerBrand = null;
+		this.selModel = null;
+		this.layerModel = null;
+		BMlist.push(this);
+		if(!bmDataLoaded){
+			loadBMScript();
+		} else {
+			this.init();
+		}
+	};
+	BM.prototype = {
+		isbodyClick: false,
+		init : function () {
+			var k = this;
+			k.elBrand = $(k.option.b);
+			k.elModel = $(k.option.m);
+			k.selBrand = k.elBrand.find('.seltit');
+			k.layerBrand = k.elBrand.find('.selcon');
+			k.selModel = k.elModel.find('.seltit');
+			k.layerModel = k.elModel.find('.selcon');
+			//Data.getbm(Data.dataBM);
+			//View.drawBrands1(k.layerBrand,Data.hots,Data.brands);
+			if(!Data.brandsHTML){	
+				Data.getBrandsAndModels(eval('('+Data.dataBM+')'));
+			}
+			
+			View.drawBrands(k.layerBrand,Data.hots,Data.brands);
+			k.layerBrand.click(function (e){
+				k.getModels.call(k,e)
+			});
+			k.selBrand.click(function(e){
+				k.showBrandLayer.call(k,e);
+			});
+			k.selModel.click(function(e){
+				k.showModelLayer.call(k,e);
+			});
+			k.layerModel.click(function (e){
+				k.selectModel.call(k,e)
+			});
+			if(!self.isbodyClick){
+				$(document.body).click(function(e){
+					$(".selbox").removeClass("show");
+				});
+				self.isbodyClick = true;
+			}
+		},
+		getModels: function(e) {
+			var k = this;
+			var curA = $(e.target),
+				bidx = 0;
+			if(curA[0].tagName.toLowerCase() == 'a'){
+				bidx = curA.attr('data-index');
+				View.drawModels(k.layerModel, Data.models[bidx]);
+				k.selBrand.html(curA.html());
+				k.selBrand.attr('data-index',bidx);
+				k.layerBrand.parent(".selbox").removeClass("show");
+				k.selModel.html('请选择');
+				k.selModel.attr('data-index',-1);
+			}
+			e.preventDefault();
+			e.stopPropagation();
+		},
+		showBrandLayer:function(e){
+			var k = this;
+			k.layerBrand.parent(".selbox").addClass("show");
+			if(k.layerModel.parent(".selbox").hasClass("show")){
+				k.layerModel.parent(".selbox").removeClass("show");
+			}
+			e.preventDefault();
+			e.stopPropagation();
+		},
+		showModelLayer: function (e) {
+			var k = this;
+			//如果brand没选，就不能选model
+			if(!k.selBrand.attr('data-index') || (k.selBrand.attr('data-index') == -1) ){
+				k.layerModel.find('ul').html('<li class="th"><a  href="javascript:;">请先选择品牌</a></li>');
+			}
+			k.layerModel.parent(".selbox").addClass("show");
+			if(k.layerBrand.parent(".selbox").hasClass("show")){
+				k.layerBrand.parent(".selbox").removeClass("show");
+			}
+			e.preventDefault();
+			e.stopPropagation();
+		},
+		selectModel: function(e){
+			var k = this;
+			var curA = $(e.target);
+			if(curA[0].tagName.toLowerCase() == 'a' && !curA.parent().hasClass('th')){
+				k.selModel.html(curA.html());
+				k.selModel.attr('data-index',curA.attr('data-index'));
+				k.layerModel.parent(".selbox").removeClass("show");
+			} else if(curA[0].tagName.toLowerCase() == 'li' && !curA.hasClass('th') ){
+				k.selModel.html(curA.find('a').html());
+				k.selModel.attr('data-index',curA.find('a').attr('data-index'));
+				k.layerModel.parent(".selbox").removeClass("show");
+			}
+			e.preventDefault();
+			e.stopPropagation();
+		}
+		
+	};
+	
+	return BM;
+});
+SA.register("ui.horizontalTab", function (a, $) {
+	function HTab(tabObj, tabConObj, className, eventType, isSpec, startIndex, preventA){
+		this.tab = tabObj;
+		this.tabcon = tabConObj;
+		this.tabParent = this.tab.parent();
+		this.mores = null;
+		this.oldTab = null;
+		this.oldTabCon = null;
+		this.oldIndex = 0;
+		this.curClass = className || 'cur';
+		this.eventType = eventType ||'mouseover';
+		this.isSpec = isSpec || 'more';
+		this.delay = 150;
+		this.startIndex = startIndex || 0;
+		this.preventA = preventA || false;
+		this.init();
+	}
+	HTab.prototype = {
+		init: function () {
+			var self = this;
+			var tabs = self.tab.children();
+			var tabCons = self.tabcon.children();
+			self.oldTab = tabs.eq(self.startIndex);
+			self.oldTabCon = tabCons.eq(self.startIndex);
+			self.oldIndex = self.startIndex;
+			//self.getmore();
+			if (self.preventA) {
+				self.tab.click(function(e){
+					e.preventDefault();
+				});
+			}
+			self.tab[self.eventType](function(e){
+				e.preventDefault();
+				var t = $(e.target);
+				if(t.hasClass('more')){
+					return;
+				}
+				if(e.target.tagName.toLowerCase() != 'a'){
+					return;
+				}
+				var idx = tabs.index(t);
+				var curCon = tabCons.eq(idx);
+				if(idx == self.oldIndex){
+					return;
+				}
+				self.time && clearTimeout(self.time);
+				self.time = setTimeout(function(){
+					self.oldTab.removeClass(self.curClass);
+				    self.oldTabCon.removeClass(self.curClass);
+					t.addClass(self.curClass);
+					curCon.addClass(self.curClass);
+					self.oldTab = t;
+					self.oldTabCon = curCon;
+					self.oldIndex = idx;
+					//self.showMore.call(self, idx);
+				},self.delay);
+			});
+		},
+		getmore: function(){
+			var k = this;
+			var morecon = k.tab.find('.morecon');
+			if(morecon.length == 0){
+				morecon = k.tabParent.find('.morecon');
+			}
+			k.mores = morecon.find('.more');
+		},
+		showMore: function(idx){
+			var k = this,
+				len = k.mores.length;
+			if( len == 0 || len == 1){
+				return;
+			}
+			for (var i=0; i<len; i++) {
+				if(i == idx){
+					k.mores.eq(i).hide();
+					continue;
+				}
+				k.mores.eq(i).show();
+			}
+		},
+		destory: function () {
+			var self = this;
+			self.tab.off(self.eventType);
+		}
+	};
+	return HTab;
+});	
+SA.register("app.BM", function(b, a) {
+    var c, g, e = {
+        url: "http://db.auto.sohu.com/attachment/js/new_model.js"
+    },
+    f = [],
+    h = !1,
+    j = !1,
+    k = {
+        b: "",
+        bid: -1,
+        m: "",
+        mid: -1,
+        y: "",
+        yid: -1,
+        t: "",
+        tid: -1
+    };
+    c = {
+        dataBM: {},
+        dataYT: {},
+        cache: {},
+        getBrandData: function() {
+            if (!this.cache.brand) {
+                for (var a = [], c = this.dataBM, b = {},
+                e = 0, g = c.length; e < g; e++) a.push({
+                    i: c[e].i,
+                    n: c[e].n
+                }),
+                b[c[e].i] = c[e].s;
+                this.cache.brand = a;
+                this.cache.model = b
+            }
+            return this.cache.brand
+        },
+        getModelData: function(a) {
+            return a ? this.cache.model[a] || [] : []
+        },
+        getYearData: function() {},
+        getTrimData: function() {}
+    };
+    g = {
+        drawBrand: function(a, c, b) {
+            var e = [],
+            g = "A",
+            f = 1,
+            h = "",
+            j = "";
+            e.push('<option value="-1">\u9009\u62e9\u54c1\u724c</option>');
+            for (var k = 0,
+            l = c.length; k < l; k++) g != c[k].n.substring(0, 1) && (f++, g = c[k].n.substring(0, 1)),
+            j = b == c[k].i ? 'selected="selected"': "",
+            h = 0 == f % 2 ? 'class="s3"': "",
+            e.push('<option value="' + c[k].i + '"' + h + j + ">" + c[k].n + "</option>");
+            a.html(e.join("\r\n"))
+        },
+        drawModel: function(a, c, b) {
+            var e = [],
+            g = "";
+            e.push('<option value="-1">\u9009\u62e9\u7cfb\u5217</option>');
+            for (var f = 0,
+            h = c.length; f < h; f++) {
+                e.push('<optgroup class="s3" label="' + c[f].n + '"></optgroup>');
+                for (var j = c[f].b, k = 0, l = j.length; k < l; k++) g = b == j[k].i ? 'selected="selected"': "",
+                e.push('<option value="' + j[k].i + '"' + g + ">" + j[k].n + "</option>")
+            }
+            a.html(e.join("\r\n"))
+        },
+        drawYear: function(a, c, b) {
+            var e = [],
+            g = "";
+            e.push('<option value="-1">\u9009\u62e9\u5e74\u6b3e</option>');
+            for (var f = 0,
+            h = c.length; f < h; f++) {
+                e.push('<optgroup class="s3" label="' + c[f].n + '">');
+                for (var j = c[f].b, f = 0, h = j.length; f < h; f++) g = b == j[f].i ? 'selected="selected"': "",
+                e.push('<option value="' + j[f].i + '"' + g + ">" + j[f].n + "</option>");
+                e.push("</optgroup>")
+            }
+            a.html(e.join("\r\n"))
+        },
+        drawTrim: function(a, c, b) {
+            var e = [],
+            g = "";
+            e.push('<option value="-1">\u9009\u62e9\u8f66\u6b3e</option>');
+            for (var f = 0,
+            h = c.length; f < h; f++) {
+                e.push('<optgroup class="s3" label="' + c[f].n + '">');
+                for (var j = c[f].b, f = 0, h = j.length; f < h; f++) g = b == j[f].i ? 'selected="selected"': "",
+                e.push('<option value="' + j[f].i + '"' + g + ">" + j[f].n + "</option>");
+                e.push("</optgroup>")
+            }
+            a.html(e.join("\r\n"))
+        }
+    };
+    var l = function(a) {
+        this.option = a;
+        f.push(this);
+        j ? this.init() : h || (h = !0, b.scriptLoader({
+            url: e.url,
+            onComplete: function() {
+                j = !0;
+                c.dataBM = window.brandMods;
+                for (var a = 0,
+                b = f.length; a < b; a++) try {
+                    f[a].init()
+                } catch(e) {}
+            }
+        }))
+    };
+    l.prototype = {
+        init: function() {
+            var b, e, f;
+            b = this.option = a.extend({},
+            k, this.option);
+            e = this.E = {
+                $elBrand: a(b.b),
+                $elModel: a(b.m)
+            };
+            f = this;
+            e.$elBrand.change(function() {
+                f.onBrandChange(e.$elBrand.val())
+            });
+            e.$elBrand.change(function() {
+                f.onModelChange(e.$elModel.val())
+            });
+            g.drawBrand(e.$elBrand, c.getBrandData(), b.bid);
+            g.drawModel(e.$elModel, c.getModelData(b.bid), b.mid)
+        },
+        onBrandChange: function(a) {
+            g.drawModel(this.E.$elModel, c.getModelData(a), a)
+        },
+        onModelChange: function() {}
+    };
+    l.set = function(a) {
+        e = a
+    };
+    return l
+});
+SA.register("ui.dropmenu", function(b, a) {
+    return function(c) {
+        var b = a(c),
+        e = null;
+        b.hover(function() {
+            e && clearTimeout(e);
+            b.addClass("cityshow")
+        },
+        function() {
+            e = setTimeout(function() {
+                b.removeClass("cityshow")
+            },
+            200)
+        })
+    }
+});
+SA.register("job", function(b, a) {
+    var c = [];
+    return {
+        add: function(a, b, f) {
+            c.push({
+                name: a,
+                level: b,
+                func: f
+            })
+        },
+        run: function() {
+            for (var g = 0,
+            e = c.length; g < e; g++) try {
+                var f = c[g],
+                h = (new Date).getTime();
+                f.func(b, a);
+                b.log("{job:" + f.name + ", level:" + f.level + "} have been run, use " + ((new Date).getTime() - h) + " ms", "profile", "SA.job")
+            } catch(j) {
+                b.log(j, "SA.job")
+            }
+        }
+    }
+});
+SA.job.add("index.city", 1, function(b, a) {
+    new b.ui.dropmenu("div.citytit:first");
+});
+SA.job.add("index.search", 1, function() {
+    new SA.app.search({
+        onSubmit: function(b, a) {
+            "Mazda3\u661f\u9a8b" == b ? a.$form.attr("action", "http://sohu.ad-plus.cn/event.ng/Type=click&FlightID=201206&TargetID=sohu&Values=969b7d04,d497ce81,38d5b7b2,cfd8a027&AdID=14217403") : a.$form.attr("action", "http://s.auto.sohu.com/search.at");
+            return ! 0
+        }
+    })
+});
+SA.job.add("index.SBL", 1, function(c, a) {
+    var b = "",
+    e = -1,
+    d = -1;
+    $ENV && ($ENV.AD && $ENV.AD.bm1) && (b = $ENV.AD.bm1.url || "", e = $ENV.AD.bm1.bid || -1, d = $ENV.AD.bm1.mid || -1);
+    new SA.app.BM({
+        b: "#app-bm-b1",
+        bid: e,
+        m: "#app-bm-m1",
+        mid: d
+    });
+    var f = a("#app-bm-b1"),
+    g = a("#app-bm-m1");
+    a("#SBL").find(">input.s2").click(function() {
+        var c = a(this).attr("data-type"),
+        e = f.val(),
+        k = g.val(); - 1 == e ? alert("\u8bf7\u6b63\u786e\u9009\u62e9\u54c1\u724c\uff01") : 1 == c ? "undefined" != typeof b && "" != b && d == k ? window.open(b) : -1 != k ? window.open("http://db.auto.sohu.com/model_" + k + "/") : window.open("http://db.auto.sohu.com/brand_" + e + "/") : 2 == c ? -1 != k ? window.open("http://db.auto.sohu.com/model_" + k + "/price.shtml") : window.open("http://db.auto.sohu.com/brand_" + e + "/price.shtml") : 3 == c ? "undefined" != typeof model_forum && "undefined" != typeof model_forum["M" + k] ? window.open(model_forum["M" + k]) : window.open("http://saa.auto.sohu.com/") : 4 == c && window.open("http://2sc.sohu.com/db/searchModel.jsp?brandId=" + e + "&modelId=" + k)
+    });
+    SA.scriptLoader({
+        url: "http://db.auto.sohu.com/blocks/modelforums.js"
+    })
+});
+SA.register('util.localcity', function() {
+    var localObject = {
+        cityName: null,
+        cityCode: null,
+        prefix: null
+    };
+	//
+	localObject.codeMap = SA.Region.ipCitys;
+    //localObject.codeMap = {"010":{name:"北京",value:["CN11"],prefix:"beijing"},"0553":{name:"芜湖",value:["CN3402"],prefix:"wuhu"},"0557":{name:"宿州",value:["CN3413"],prefix:"suzhoucs"},"0558":{name:"阜阳",value:["CN3412"],prefix:"suzhou"},"0550":{name:"滁州",value:["CN3411"],prefix:"suzhou"},"0556":{name:"安庆",value:["CN3408"],prefix:"suzhou"},"0554":{name:"淮南",value:["CN3404"],prefix:"suzhou"},"0552":{name:"蚌埠",value:["CN3403"],prefix:"suzhou"},"0564":{name:"六安",value:["CN3415"],prefix:"suzhou"},"0596":{name:"漳州",value:["CN3506"],prefix:"suzhou"},"0931":{name:"兰州",value:["CN6201"],prefix:"suzhou"},"0772":{name:"柳州",value:["CN4502"],prefix:"suzhou"},"0773":{name:"桂林",value:["CN4503"],prefix:""},"0377":{name:"南阳",value:["CN4113"],prefix:""},"0391":{name:"焦作",value:["CN4108"],prefix:""},"0375":{name:"平顶山",value:["CN4104"],prefix:""},"0376":{name:"信阳",value:["CN4115"],prefix:""},"0374":{name:"许昌",value:["CN4110"],prefix:""},"0398":{name:"三门峡",value:["CN4112"],prefix:""},"0393":{name:"濮阳",value:["CN4109"],prefix:""},"0370":{name:"商丘",value:["CN4114"],prefix:""},"0372":{name:"安阳",value:["CN4105"],prefix:""},"0396":{name:"驻马店",value:["CN4117"],prefix:""},"0394":{name:"周口",value:["CN4116"],prefix:""},"0378":{name:"开封",value:["CN4102"],prefix:""},"0715":{name:"咸宁",value:["CN4212"],prefix:""},"0716":{name:"荆州",value:["CN4210"],prefix:""},"0736":{name:"常德",value:["CN4307"],prefix:""},"0730":{name:"岳阳",value:["CN4306"],prefix:""},"0733":{name:"株洲",value:["CN4302"],prefix:""},"0739":{name:"邵阳",value:["CN4305"],prefix:""},"0515":{name:"盐城",value:["CN3209"],prefix:""},"0518":{name:"连云港",value:["CN3207"],prefix:""},"0517":{name:"淮安",value:["CN3208"],prefix:""},"0527":{name:"宿迁",value:["CN3213"],prefix:""},"0793":{name:"上饶",value:["CN3611"],prefix:""},"0792":{name:"九江",value:["CN3604"],prefix:""},"0472":{name:"包头",value:["CN1502"],prefix:""},"0476":{name:"赤峰",value:["CN1504"],prefix:""},"0477":{name:"鄂尔多斯",value:["CN1506"],prefix:""},"0475":{name:"通辽",value:["CN1505"],prefix:""},"0951":{name:"银川",value:["CN6401"],prefix:""},"0971":{name:"西宁",value:["CN6301"],prefix:""},"0538":{name:"泰安",value:["CN3709"],prefix:""},"0354":{name:"晋中",value:["CN1407"],prefix:""},"0358":{name:"吕梁",value:["CN1411"],prefix:""},"0356":{name:"晋城",value:["CN1405"],prefix:""},"0350":{name:"忻州",value:["CN1409"],prefix:""},"0353":{name:"阳泉",value:["CN1403"],prefix:""},"0910":{name:"咸阳",value:["CN6104"],prefix:""},"0913":{name:"渭南",value:["CN6105"],prefix:""},"0917":{name:"宝鸡",value:["CN6103"],prefix:""},"0916":{name:"汉中",value:["CN6107"],prefix:""},"0833":{name:"乐山",value:["CN5111"],prefix:""},"0991":{name:"乌鲁木齐",value:["CN6501"],prefix:""},"0578":{name:"丽水",value:["CN3311"],prefix:""},"0551":{name:"合肥",value:["CN3401","CN3405","CN3406","CN3407","CN3410","CN3418","CN3417","CN3416"],prefix:""},"0591":{name:"福州",value:["CN3501","CN71","CN3503","CN3504","CN3507","CN3509"],prefix:""},"0592":{name:"厦门",value:["CN3502","CN3508"],prefix:""},"020":{name:"广州",value:["CN4401","CN4416"],prefix:""},"0755":{name:"深圳",value:["CN4403"],prefix:""},"0757":{name:"佛山",value:["CN4406"],prefix:""},"0769":{name:"东莞",value:["CN4419"],prefix:""},"0311":{name:"石家庄",value:["CN1301"],prefix:""},"0315":{name:"唐山",value:["CN1302"],prefix:""},"0371":{name:"郑州",value:["CN4101","CN4106","CN4111","CN410881"],prefix:""},"0451":{name:"哈尔滨",value:['CN2301','CN2311','CN2327'],prefix:""},"027":{name:"武汉",value:['CN4201','CN4202','CN4207','CN4208','CN4209','CN4211','CN4213','CN4228','CN429004','CN429006','CN429005','CN429021'],prefix:""},"0731":{name:"长沙",value:['CN4301','CN4303','CN4308','CN4309','CN4313','CN4310','CN4311','CN4312','CN4331'],prefix:""},"0431":{name:"长春",value:['CN2201'],prefix:""},"025":{name:"南京",value:['CN3201'],prefix:""},"0512":{name:"苏州",value:["CN3205"],prefix:"suzhou"},"0510":{name:"无锡",value:["CN3202"],prefix:"wuxi"},"0513":{name:"南通",value:["CN3206"],prefix:"nantong"},"0791":{name:"南昌",value:["CN3601","CN3603","CN3605","CN3606","CN3609","CN3602","CN3608","CN3610"],prefix:"nanchang"},"0411":{name:"大连",value:["CN2102"],prefix:"dalian"},"024":{name:"沈阳",value:["CN2101"],prefix:"shenyang"},"0531":{name:"济南",value:["CN3701","CN3712"],prefix:"jinan"},"0532":{name:"青岛",value:["CN3702"],prefix:"qingdao"},"0535":{name:"烟台",value:["CN3706"],prefix:"yantai"},"0539":{name:"临沂",value:["CN3713"],prefix:"linyi"},"0536":{name:"潍坊",value:["CN3707"],prefix:"beijing"},"0533":{name:"淄博",value:["CN3703"],prefix:"zibo"},"0351":{name:"太原",value:["CN1401","CN1406"],prefix:"taiyuan"},"029":{name:"西安",value:["CN6101","CN6102","CN6106","CN6109","CN6110"],prefix:"xian"},"021":{name:"上海",value:["CN31"],prefix:"shanghai"},"028":{name:"成都",value:["CN5101","CN5103","CN5104","CN5105","CN5108","CN5109","CN5110","CN5115","CN5114","CN5116","CN5117","CN5118","CN5119","CN5120","CN5132","CN5133","CN5134"],prefix:"chengdu"},"022":{name:"天津",value:["CN12"],prefix:"tianjin"},"0871":{name:"昆明",value:["CN5301","CN5303","CN5305","CN5306","CN5307","CN5308","CN5309","CN5323","CN5329","CN5325","CN5326","CN5328","CN5331","CN5333","CN5334"],prefix:"kunming"},"0571":{name:"杭州",value:["CN3301"],prefix:"hangzhou"},"0574":{name:"宁波",value:["CN3302","CN3309"],prefix:"beijing"},"0516":{name:"徐州",value:["CN3203"],prefix:"beijing"},"0577":{name:"温州",value:["CN3303"],prefix:"wenzhou"},"023":{name:"重庆",value:["CN5000","CN5002","CN500100","CN500102","CN500103","CN500104","CN500105","CN500106","CN500107","CN500108","CN500109","CN500110","CN500111","CN500112","CN500113","CN500114","CN500115"],prefix:"chongqing"},"0595":{name:"泉州",value:["CN3505"],prefix:"quanzhou"},"0752":{name:"惠州",value:["CN4413"],prefix:"huizhou"},"0201":{name:"粤东",value:["CN4405","CN4415","CN4451","CN4452","CN4414"],prefix:"yuedong"},"0543":{name:"滨州",value:["CN3716"],prefix:"yuedong"},"0419":{name:"辽阳",value:["CN2110"],prefix:"yuedong"},"0760":{name:"中山",value:["CN4420"],prefix:"zhongshan"},"0756":{name:"珠海",value:["CN4404"],prefix:"beijing"},"0202":{name:"粤北",value:["CN3202"],prefix:"yuebei"},"0203":{name:"粤西",value:["CN4408","CN4409","CN4453","CN4412"],prefix:"yuexi"},"0750":{name:"江门",value:["CN4407"],prefix:"jiangmen"},"0771":{name:"南宁",value:["CN4501","CN4504","CN4505","CN4506","CN4507","CN4508","CN4509","CN4510","CN4511","CN4512","CN4513","CN4514"],prefix:"nanning"},"0851":{name:"贵阳",value:["CN52"],prefix:"beijing"},"0310":{name:"邯郸",value:["CN1304"],prefix:"beijing"},"0317":{name:"沧州",value:["CN3202"],prefix:"cangzhou"},"0312":{name:"保定",value:["CN1306"],prefix:"baoding"},"0335":{name:"秦皇岛",value:["CN1303"],prefix:"qinhuangdao"},"0314":{name:"承德",value:["CN1308"],prefix:"chengde"},"0313":{name:"张家口",value:["CN1307"],prefix:"zhangjiakou"},"0316":{name:"廊坊",value:["CN1310"],prefix:"langfang"},"0318":{name:"衡水",value:["CN1311"],prefix:"hengshui"},"0319":{name:"邢台",value:["CN1305"],prefix:"xingtai"},"0373":{name:"新乡",value:["CN4107"],prefix:"xinxiang"},"0379":{name:"洛阳",value:["CN4103"],prefix:"luoyang"},"0459":{name:"大庆",value:["CN2306"],prefix:"daqing"},"0452":{name:"齐齐哈尔",value:["CN2302"],prefix:"qiqihaer"},"0455":{name:"绥化",value:["CN2312"],prefix:"suihua"},"0458":{name:"伊春",value:["CN2307"],prefix:"yichun"},"0719":{name:"十堰",value:["CN4203"],prefix:"yichun"},"0454":{name:"佳木斯",value:["CN2308"],prefix:"jiamusi"},"0468":{name:"鹤岗",value:["CN2304"],prefix:"hegang"},"0469":{name:"双鸭山",value:["CN2305"],prefix:"hegang"},"0464":{name:"七台河",value:["CN2309"],prefix:"qitaihe"},"0467":{name:"鸡西",value:["CN2303"],prefix:"jixi"},"0453":{name:"牡丹江",value:["CN2310"],prefix:"mudanjiang"},"0717":{name:"宜昌",value:["CN4205"],prefix:"yichang"},"0710":{name:"襄阳",value:["CN4206"],prefix:"xiangyang"},"0734":{name:"衡阳",value:["CN4304"],prefix:"hegang"},"0432":{name:"吉林",value:["CN2202"],prefix:"jilin"},"0436":{name:"白城",value:["CN2208"],prefix:"baicheng"},"0438":{name:"松原",value:["CN2207"],prefix:"songyuan"},"0433":{name:"延边",value:["CN2224"],prefix:"yanbian"},"0434":{name:"四平",value:["CN2203"],prefix:"hegang"},"0437":{name:"辽源",value:["CN2204"],prefix:"liaoyuan"},"0439":{name:"白山",value:["CN2306"],prefix:"baishan"},"0231":{name:"万州",value:["CN500101"],prefix:"wanzhou"},"0576":{name:"台州",value:["CN3310"],prefix:"taizhou"},"0579":{name:"金华",value:["CN3307"],prefix:"jinhua"},"0570":{name:"衢州",value:["CN3308"],prefix:"quzhou"},"0572":{name:"湖州",value:["CN3305"],prefix:"huzhou"},"0575":{name:"绍兴",value:["CN3306"],prefix:"beijing"},"0573":{name:"嘉兴",value:["CN3304"],prefix:"jiaxing"},"0877":{name:"玉溪",value:["CN5304"],prefix:"yuxi"},"0838":{name:"德阳",value:["CN5106"],prefix:"deyang"},"0817":{name:"南充",value:["CN5113"],prefix:"nanchong"},"0816":{name:"绵阳",value:["CN5170"],prefix:"beijing"},"0912":{name:"榆林",value:["CN6108"],prefix:"yulin"},"0359":{name:"运城",value:["CN1408"],prefix:"yuncheng"},"0355":{name:"长治",value:["CN1404"],prefix:"changzhi"},"0357":{name:"临汾",value:["CN1410"],prefix:"linfen"},"0352":{name:"大同",value:["CN1402"],prefix:"datong"},"0530":{name:"菏泽",value:["CN3717"],prefix:"heze"},"0633":{name:"日照",value:["CN3711"],prefix:"rizhao"},"0631":{name:"威海",value:["CN3710"],prefix:"weihai"},"0546":{name:"东营",value:["CN3705"],prefix:"dongying"},"0632":{name:"枣庄",value:["CN3704"],prefix:"zaozhuang"},"0537":{name:"济宁",value:["CN3708"],prefix:"jining"},"0635":{name:"聊城",value:["CN3715"],prefix:"liaocheng"},"0534":{name:"德州",value:["CN3714"],prefix:"dezhou"},"0471":{name:"呼和浩特",value:["CN1501","CN1503","CN1507","CN1508","CN1509","CN1522","CN1525"],prefix:"huhehaote"},"0427":{name:"盘锦",value:["CN2111"],prefix:"panjin"},"0417":{name:"营口",value:["CN2108"],prefix:"yingkou"},"0415":{name:"丹东",value:["CN2106"],prefix:"dandong"},"0414":{name:"本溪",value:["CN2105"],prefix:"benxi"},"0242":{name:"铁岭",value:["CN2112"],prefix:"tieling"},"0413":{name:"抚顺",value:["CN2104"],prefix:"fushun"},"0421":{name:"朝阳",value:["CN2113"],prefix:"chaoyang"},"0418":{name:"阜新",value:["CN2109"],prefix:"fuxin"},"0429":{name:"葫芦岛",value:["CN2114"],prefix:"huludao"},"0416":{name:"锦州",value:["CN2107"],prefix:"jinzhou"},"0412":{name:"鞍山",value:["CN2103"],prefix:"anshan"},"0797":{name:"赣州",value:["CN3607"],prefix:"ganzhou"},"0511":{name:"镇江",value:["CN3211"],prefix:"zhenjiang"},"0514":{name:"扬州",value:["CN3210"],prefix:"yangzhou"},"0519":{name:"常州",value:["CN3204"],prefix:"changzhou"},"0523":{name:"泰州",value:["CN3212"],prefix:"taizhou"},"0435":{name:"通化",value:["CN2205"],prefix:"tonghua"}};
+    localObject.getCodeObject = function(code) {
+        var objA = {}, map = localObject.codeMap, len = map.length, temp;
+		for(var i = 0; i < len; i++){
+			temp = map[i];
+			if(temp.code === code){
+				objA.cityName = temp.name;
+				objA.cityCode = code;
+				objA.prefix = temp.prefix;
+				return objA;
+			}
+		}
+		return null;
+	};
+	/*localObject.getCodeObject = function(code) {
+        var objA = {};
+        var obj = this.codeMap[code];
+        if (obj) {
+            objA.cityName = obj.name;
+            objA.cityCode = code;
+            objA.prefix = obj.prefix;
+            return objA;
+        } else {
+            return null;
+        }
+    };*/
+    localObject.init = function() {
+        if (typeof(sohu_IP_Loc) == 'undefined' || sohu_IP_Loc == 'unknown') return;
+        var isOk = false;
+		var objA = {}, map = localObject.codeMap, len = map.length, temp, len1,cns;
+		for(var i = 0; i < len; i++){
+			temp = map[i];cns = temp.cn;
+			for(var j=0,len1 = cns.length; j < len1; j++){
+				if (sohu_IP_Loc.indexOf(cns[j]) == 0) {
+					this.cityName = temp.name;
+					this.cityCode = temp.code;
+					this.prefix = temp.prefix;
+					isOk = true;
+					break;
+				}
+			}
+			
+		}
+        /*for (var key in this.codeMap) {
+            var obj = this.codeMap[key];
+            if (obj.value) {
+                var len = obj.value.length;
+                for (var i = 0; i < len; i++) {
+                    if (sohu_IP_Loc.indexOf(obj.value[i]) == 0) {
+                        this.cityName = obj.name;
+                        this.cityCode = key;
+                        this.prefix = obj.prefix;
+                        isOk = true;
+                        break;
+                    }
+                }
+            }
+        }*/
+        if (!isOk) {
+            var provinceCode = {
+                "020": ["CN44"],
+                /* 广州 */
+                "0591": ["CN35"],
+                /* 福州 */
+                "0571": ["CN33"],
+                /* 杭州 */
+                "0531": ["CN37"],
+                /* 济南 */
+                "024": ["CN21"]
+                /* 沈阳 */
+            };
+            for (area in provinceCode) {
+               /* if (!provinceCode.hasOwnProperty(area) || !this.codeMap[area]) {
+                    continue;
+                }*/
+				if( !provinceCode.hasOwnProperty(area) || !this.getCodeObject(area)){
+					continue;
+				}
+                for (var i = 0,
+                len = provinceCode[area].length; i < len; i++) {
+                    if (sohu_IP_Loc.indexOf(provinceCode[area][i]) == 0) {
+                        var objT = this.getCodeObject(area);
+                        if (objT) {
+                            this.cityName = objT.cityName;
+                            this.cityCode = area;
+                            this.prefix = objT.prefix;
+                        }
+                    }
+                }
+            }
+        }
+        this.inited = true;
+    };
+    return localObject;
+});
+
+SA.register('util.soip', function(a, $) {
+    var url = 'http://txt.go.sohu.com/ip/soip',
+    list = [],
+    isGet = false,
+    isLoad = false;
+    function ipLoaded() {
+        for (var i = 0,
+        j = list.length; i < j; i++) {
+            try {
+                list[i]()
+            } catch(e) {}
+        }
+        list = [];
+    }
+    function getIp() {
+        if (isGet) return;
+        isGet = true;
+        if (typeof(window.sohu_IP_Loc) == "undefined") {
+            a.scriptLoader({
+                url: url,
+                onComplete: function() {
+                    isLoad = true;
+                    ipLoaded();
+                }
+            });
+        } else {
+            isLoad = true;
+            ipLoaded();
+        }
+    }
+    return function(func) {
+        if (isLoad) {
+            func();
+        } else {
+            list.push(func);
+            getIp();
+        }
+    }
+});
+SA.register('auto.jsonp', function(a, $){
+	return function(js, func) {
+		var script = document.createElement('script');
+		script.type = 'text/javascript';
+		if (script.readyState) {
+			script.onreadystatechange = function() {
+				if (script.readyState == "loaded" || script.readyState == "complete") {
+					script.onreadystatechange = null;
+					func && func()
+				}
+			}
+		} else {
+			script.onload = function() {
+				func && func()
+			}
+		}
+		script.src = js;
+		document.getElementsByTagName('head')[0].appendChild(script)
+	};
+});
+//key事件翻页
+SA.register('article.page', function(a, $){
+	function keyupPage (cfg) {
+		this.dom = cfg.pageDom;
+		this.hrefs = [],
+		this.cur = -1;
+		this.max = -1;
+		this.init();
+	}
+	keyupPage.prototype = {
+		init: function() {
+			var k = this;
+			if(k.check()){
+				k.cur = k.getcur();
+				k.hrefs = k.gethrefs();
+				k.keyevent();
+			}
+		},
+		keyevent: function(){
+			var k = this;
+			$(document).keydown(function(e){
+				var code = e.which,
+					temp;
+				if (code == 37) { 
+					if(k.cur>1){
+						temp = k.cur-1;
+						for(var i=0,l = k.hrefs.length;i<l;i++){
+							if (temp == k.hrefs[i].pos) {
+								top.location.href = k.hrefs[i].addr;
+								break;
+							}
+						}
+					}
+				} else if (code == 39) {
+					if(k.cur < k.max){
+						temp = k.cur+1;
+						for(var i=0,l = k.hrefs.length;i<l;i++){
+							if (temp == k.hrefs[i].pos) {
+								top.location.href = k.hrefs[i].addr;
+								break;
+							}
+						}
+					}
+				}
+			});
+		},
+		check: function () {
+			var k = this;
+			var res = k.dom.length>0 ? true : false;
+			return res;
+		},
+		getcur : function() {
+			var k = this;
+			var i = Number(k.dom.find('span').html());
+			return i;
+		},
+		gethrefs: function() {
+			var k = this,
+				arr = [],
+				list = [];
+				als = k.dom.find('a');
+			for(var x =0,l=als.length;x<l;x++){
+				var t = als.eq(x);
+				if(!t.hasClass('pages-wd')){
+					var href = t.attr('href'),
+					i = t.html();
+					arr.push({pos:i,addr: href});
+					list.push(t);
+				}
+			}
+			k.max = Number(list[list.length-1].html());
+			return arr;
+		}
+	};
+	return keyupPage;
+	
+});
+
+SA.job.add("article.keypage", 1, function(b, a) {
+	new SA.article.page({pageDom: $('#contentA .pages')});
+});
+SA.job.add('page.chip1',1,function(a,$){
+    if(typeof window.model_active_id != 'undefined' && window.model_active_id){
+		//新增推广广告------------------------------------------------
+		SA.util.soip(function(){
+			var city = sohu_IP_Loc.substr(2);
+			window.setTuiguang = function (data){
+				var model = data.modelInfo,
+					html = '';
+				if(model.jiangF == null){
+					return;
+				}
+				html = '<a target="_blank" href="'+model.jiangjiaListUrl+'">'+model.subbrandName+'最高降幅'+model.jiangF+'万</a>';
+				$('#subNav').find('.sub_ad').html(html);
+			};
+			$('<script />').attr('src','http://dealer.auto.sohu.com/mongo/jiangjia/jiangE/model_'+model_active_id+'/city_'+city+'.index?callback=setTuiguang').appendTo(document.body);
+		});
+		//新增推广广告------------------------------------------------
+		
+		
+		SA.auto.jsonp('http://db.auto.sohu.com/api/model/info/'+model_active_id+'.json',function(){
+			var html = [],
+				yhcx = $('#youhuichexing'),
+				yhtb = $('#youhuitoubu');
+			
+			if(!modelInfo){
+				yhcx.css('display', 'none');
+				yhtb.css('display', 'none');
+				return;
+			}
+			if(!modelInfo.modelname || !modelInfo.logo || !modelInfo.price || !modelInfo.engine || !modelInfo.bsx){
+				yhcx.css('display', 'none');
+				yhtb.css('display', 'none');
+				return;
+			}
+			yhtb.html('<h3><a href="http://db.auto.sohu.com/model_'+modelInfo.modelId+'/" target="_blank">'+modelInfo.modelname+'</a></h3>');
+			html.push('<div class="piccon"> <a target="_blank" href="http://db.auto.sohu.com/model_'+modelInfo.modelId+'/"><img width="118" height="78" alt="'+modelInfo.modelname+'" onerror="javascript:this.src=\'http://i2.itc.cn/20101015/7d2_dbc3af52_59c6_48a3_9669_900aa619cefa_0.gif\'" src="'+modelInfo.logo+'"></a> </div>');
+			html.push('<p><span class="col9">指导价：</span><a target="_blank" href="http://db.auto.sohu.com/model_'+modelInfo.modelId+'/price.shtml" class="red">'+modelInfo.price+'</a><br/>');
+			html.push('<span class="col9">级&nbsp;&nbsp;别：</span>'+modelInfo.jibie+'<br/>');
+			var engine = modelInfo.engine;
+			if(modelInfo.engine && modelInfo.engine.length>10){
+				engine = modelInfo.engine.substring(0,10);
+			}
+			html.push('<span class="col9"  title="'+modelInfo.engine+'">排&nbsp;&nbsp;量：'+engine+'</span><br/>');
+			var bsx = modelInfo.bsx;
+			if(modelInfo.bsx && modelInfo.bsx.length>8){
+				bsx = modelInfo.bsx.substring(0,8);
+			}
+			html.push('<span class="col9" title="'+modelInfo.bsx+'">变速箱：'+bsx+'</span></p>');
+			yhcx.html(html.join(''));
+		});
+		
+		var showDealerPriceInfo = function($html){
+			if ( $html.filter('#c2').children('.jiangjia_box').length >0 && $.trim($html.filter('#c2').children('.jiangjia_box').html())) {
+				$('#chip-jiangjia').html( $html.filter('#c2').children('.jiangjia_box').html() );//直降8.1万
+			}
+			if($html.filter('#c2').children('.jj_box').length > 0 && $.trim($html.filter('#c2').children('.jj_box').html())){
+				$('#chip-jj_box').html( $html.filter('#c2').children('.jj_box').html() );//降价box
+				$('#chip-jj_box').css('display','block');
+			} else {
+				$('#chip-jj_box').css('display','none');
+			}
+			if($.trim($html.filter('#c3').html())){
+				$('#chip-conbox').html( $html.filter('#c3').html() );//经销商推荐 
+				$('#chip-conbox').css('display','block');
+			} else {
+				$('#chip-conbox').css('display','none');
+			}
+			if( $.trim($html.filter('#c4').html()) ){
+				$('#chexingmq>div.r').html( $html.filter('#c4').html() );//降价促销
+			} else {
+				$('#chexingmq>div.r').css('display',"none");
+				$('#chexingmq>div.l').css("border-right","none 0");
+			}
+		};
+		var requestDealerInfoFunc =  function () {
+			SA.util.soip(function(){
+				SA.util.localcity.init();
+				if( !SA.util.localcity.cityCode ) return;			
+				window.pageChip = function( html ){
+					var $html=$(html);
+					if( $.trim($html.filter('#c1').html()) ){
+						$('#chip-yhlist').removeClass('yhlist2').addClass('yhlist1');
+						$('#chip-yhlist').html( $html.filter('#c1').children('ul').html() );//最新优惠信息
+						$('#chip-yhlist').parent().find('.yhtit').html($html.filter('#c1').children('.yhtit').html());
+						
+					}else{
+						$('#chip-yhlist').css('display','none');
+						$('#chip-yhlist').parent().find('.yhtit').css('display','none');
+						var dealerid = dealerPriceDom.attr('data-dealerid');
+						if(dealerid){
+							$('<script />').attr('src','http://dealer.auto.sohu.com/mongo/jiangjia/dealer/dealer_'+dealerid+'.index?callback=setDealerMP').appendTo(document.body);
+						}
+					}
+					showDealerPriceInfo($html);
+				};
+				$('<script />').attr('src','http://dealer.auto.sohu.com/newsFinalPageV1/modelId_'+window.model_active_id+'_city_'+SA.util.localcity.cityCode+'.index?callback=pageChip').appendTo(document.body);
+			});
+		};
+		var initDealerMap = function () {
+			var p = window.pointStr,
+				addr = window.addressStr, 
+				name = window.dealerNameStr,
+				arr = p.split(','); 
+			var point = new sogou.maps.Point(arr[0], arr[1]);
+			var myOptions = {
+			  'zoom': 15,
+			  'center': point,
+			  'mapTypeId': sogou.maps.MapTypeId.ROADMAP
+			};
+			mapObj = new sogou.maps.Map(document.getElementById("mapContainer"), myOptions); 
+			var dealerMarker = new sogou.maps.Marker({
+				position: point,
+				map:mapObj,
+				title:name
+			});
+			$('#nameCn').html(name);
+			$('#address').html(addr);
+			$('#closeMap').click(function(e){
+				e.preventDefault();
+				$('#map_canvas').css("display","none");
+				$('#dialogbg').css("display","none");
+			});
+		};
+		
+		var hrefStr = location.href;
+		if(hrefStr.indexOf('http://auto.sohu.com') == 0){
+			SA.util.soip(function(){
+				SA.util.localcity.init();
+				if( !SA.util.localcity.cityCode ) return;
+				
+				window.pageChip = function( html ){
+					var $html=$(html);
+					if( $.trim($html.filter('#c1').html()) ){
+						if(getRandom()){
+							$('#chip-yhlist').removeClass('yhlist2').addClass('yhlist1');
+							$('#chip-yhlist').html( $html.filter('#c1').children('ul').html() );//最新优惠信息
+							$('#chip-yhlist').parent().find('.yhtit').html($html.filter('#c1').children('.yhtit').html());
+						} else {
+							var h = $('#chip-yhlist').html();
+							if(!$.trim(h)){
+								$('#chip-yhlist').removeClass('yhlist2').addClass('yhlist1');
+								$('#chip-yhlist').html( $html.filter('#c1').children('ul').html() );//最新优惠信息
+								$('#chip-yhlist').parent().find('.yhtit').html($html.filter('#c1').children('.yhtit').html());
+							}
+						}
+					}else{
+						var h1 = $('#chip-yhlist').html();
+						if(!$.trim(h1)){
+							$('#chip-yhlist').css('display','none');
+							$('#chip-yhlist').parent().find('.yhtit').css('display','none');
+						}
+					}
+					showDealerPriceInfo($html);
+				};
+				$('<script />').attr('src','http://dealer.auto.sohu.com/newsFinalPageV1/modelId_'+window.model_active_id+'_city_'+SA.util.localcity.cityCode+'.index?callback=pageChip').appendTo(document.body);
+			});
+		} else {//区域信息文章页
+			//新增经销商名片------------------------------------------------
+			var dealerPriceDom = $('#dealer-price');
+			window.setDealerMP = function(data){
+				var box = $('.rjxscon'), rjxsbox = $('.rjxsbox'), htmlArr = [], info = data.dealerInfo,addr,imgurl;
+				window.pointStr = info.mapInfo;
+				window.addressStr = info.address;
+				window.dealerNameStr = info.zhName;
+				if(window.addressStr.length > 12) {
+					addr = window.addressStr.substr(0,12)+"..";
+				}else {
+					addr = window.addressStr;
+				}
+				//addr = '海淀区闵庄路19号海淀区闵海闵庄路'.substr(0,12)+"..";
+				htmlArr.push('<h5><a href="'+info.dealerUrl+'" target="_blank">'+info.zhName+'</a></h5><em>'+info.tel+'</em>');
+				htmlArr.push('<p title="'+info.address+'">公司地址：'+addr+'</p>');
+				imgurl = "http://api.go2map.com/engine/api/static/image+{'points':'"+info.mapInfo+"',height:'57','width':298,'zoom':12,'center':'"+info.mapInfo+"',labels:'"+info.shortName+"',pss:'S1756',city:'"+info.areaName+"'}.png";
+				htmlArr.push('<div class="rjxspic" style="cursor:pointer;"><img src="'+imgurl+'" width="298" height="57"></div>');
+				box.html(htmlArr.join(''));
+				rjxsbox.find('.mapbtn').click(function(e){
+					e.preventDefault();
+					$('#map_canvas').css("display", "block");
+					$('#dialogbg').css("display", "block");
+				});
+				box.find('.rjxspic').click(function(e){
+					e.preventDefault();
+					$('#map_canvas').css("display", "block");
+					$('#dialogbg').css("display", "block");
+				});
+				SA.auto.jsonp('http://api.go2map.com/maps/js/api_v2.5.1.js',function(){
+					initDealerMap();
+				});
+				$('#chip-yhlist').css('display','none');
+				$('#chip-yhlist').parent().find('.yhtit').css('display','none');
+				rjxsbox.css('display','block');
+			};
+			if(dealerPriceDom.length > 0) {
+				var dealerid = dealerPriceDom.attr('data-dealerid');
+				if(dealerid){
+					if(getRandom()){
+						$('<script />').attr('src','http://dealer.auto.sohu.com/mongo/jiangjia/dealer/dealer_'+dealerid+'.index?callback=setDealerMP').appendTo(document.body);
+					} else {
+						requestDealerInfoFunc();
+					}
+				} else {
+					requestDealerInfoFunc();
+				}
+			} else {
+				requestDealerInfoFunc();
+			}
+			//新增经销商名片------------------------------------------------
+			
+		}
+		
+    } else {
+		if ($('#chexingmq').length > 0) {
+			$('#chexingmq>div.r').css('display', "none");
+			$('#chexingmq>div.l').css("border-right", "none 0");
+		}
+		if ($('#newsxg').length > 0) {
+			setTimeout(function () {
+				if ($('#newsxg>div.r').find("li").length <= 0) {
+					$('#newsxg>div.r').css('display', "none");
+					$('#newsxg>div.l').css("border-right", "none 0");
+				}
+			}, 1000);
+		}
+	}
+});
+// 是否替换信息
+var getRandom = function () {
+	var ini = Math.random()*100,
+		ys = ini%3;
+	if(ys < 2){
+		return true;
+	} else {
+		return false;
+	}
+};
+//search
+$('#bottomSearch').click( function (e) {
+	var searchTxt = $('#psearchkeyword').val();
+	e.preventDefault();
+	$('#mainSearchHidden').val(searchTxt);
+	$('#mainSearchForm')[0].submit();
+});
+
+SA.register("article.toHome", function (a, $) {
+	
+	var ipLocation1 = function () {
+		this.url = null;
+		this.city =  a.Region.ipCitys;
+		this.code = '';
+		this.item = null;
+		this.initevent()
+		
+	};
+	ipLocation1.prototype = {
+		initevent : function () {
+			var k = this, temp;
+			k.url = top.location.href;
+			var arr = k.url.split('/');
+			k.code = arr[0]+"/"+arr[1]+"/"+arr[2]+"/";
+			for(var i = 0, len =k.city.length; i< len; i++ ){
+				temp = k.city[i];
+				if($.trim(temp.url) == $.trim(k.code)){
+					k.item = temp;
+					break;
+				}
+			}
+			k.loadData(k.item);
+		},
+		loadData : function (item) {
+			if(!item){
+				return;
+			}
+			$("#cbtn").attr('href', item.url);
+			$("#cbtn span").html('返回搜狐汽车'+item.name+'站');
+		}
+	};
+	return ipLocation1;
+});
+//定位到地方站首页
+$(function(){
+	new SA.article.toHome();
+});
+//加翻页提示
+$(document).ready(function(e){
+	var page = $('.pages');
+	if(page.length >0){
+		page.after('<div class="pagestip">提示：支持键盘“←→”键翻页</div>');
+	}
+	//降价促销 和 导购试驾 是否隐藏
+	var c = $('#chexingmq');
+	var l = c.find('.l');
+	var r = c.find('.r');
+	var rstr = r.html();
+	var lstr = l.find('.list14').html();
+	if(!$.trim(rstr) || !$.trim(lstr)){
+		l.css('display','none');
+		r.css('display','none');
+		c.css('height','0');
+	}
+	    
+});
+
+jQuery(function(jq){
+	if(jq("#scan-layer-id .scan-pic img").length > 0){
+		   var theU = "http://s1.rr.itc.cn/qrcode/m/n/"+entityId+".png";
+		   jq("#scan-layer-id .scan-pic img").attr("src",theU);
+	}
+	jq(".scan-icon").click(function(){
+		jq("#scan-layer-id").show();
+	});
+	jq("#scan-layer-id .scan-layer-close a").click(function(){
+		jq("#scan-layer-id").hide();
+	});
+});
+jQuery(function(jq){
+	jq(".fontsize").hover(function(){
+		jq(".fontsize-layer").show();
+		},function(){
+		jq(".fontsize-layer").hide();
+	});
+	
+		jq(".print").hover(function(){
+				   jq(".print-layer").show();
+				   },function(){
+				   jq(".print-layer").hide();
+		 });
+		 //转换字号
+	function doZoom(size){	
+		jQuery("#contentText").css("fontSize",size);
+	}
+	var printArticle = function(){
+		jQuery.getScript("http://news.sohu.com/upload/article/2012/js/print_roll.js",function(){printer.print()},true)
+	}
+});
+function getMetaKeyword (){
+	var metas = document.getElementsByTagName('meta'),
+		tArr = [],
+		contents = "";
+	for	(var i = 0,l = metas.length; i < l; i++) {
+		var item = metas.item(i);
+		if(item.name && item.name.toLowerCase() == 'keywords'){
+			contents = item.content;
+			break;
+		}
+	}
+	tArr = contents.split(/(\s)+/);
+	return tArr[0];
+}
+$(document).ready(function(){
+	var searchform = document.getElementById('searchform');
+	searchform.innerHTML = '<input type="hidden" name="p" id="p" value="02240101" class="inputB" /><input type="submit" class="btn111" value="" /><input type="text" class="tx" name="query" id="query11" value="请输入关键词"  style="color:#ccc" />';
+	setTimeout(function(){
+		var query11 = document.getElementById('query11');
+		var meta = getMetaKeyword();
+		query11.value = meta;
+		query11.onfocus = function(){
+			this.style.color="#000";
+			if (this.value==meta) 
+				this.value="";
+		};
+		query11.onblur = function(){
+			if(!this.value){
+			   this.value = meta;
+			   this.style.color="#ccc";
+			}
+			CheckColor();
+		};
+	},500);
+});
+//你会喜欢
+$(function(){
+	var ul1 = $('#usecar');//uls.eq(0);
+	var ul2 =$('#newcar');// urs.eq(1);
+	var cur1 = ul1.find('.on');
+	var cur2 = ul2.find('.on');
+	
+	ul1.on('mouseenter','li',function(){
+		var t = $(this);
+		if(cur1){
+			cur1.removeClass('on');
+		}
+		t.addClass('on');
+		cur1 = t;
+	});
+	ul2.on('mouseenter','li',function(){
+		var t1 = $(this);
+		if (cur2) {
+			cur2.removeClass('on');
+		}
+		t1.addClass('on');
+		cur2 = t1;
+	});
+});
+//随机广告
+(function(){
+    function getys () {
+		var ini = Math.random()*100,
+			ys = ini%3;
+		return ys;
+	}
+	function replaceAddr (arr) {
+		var ys = getys(),
+			href = "",
+			img = "";
+		switch(Math.floor(ys)){
+			case 0 : 
+				href = arr[0].href;
+				img = arr[0].img;
+				break;
+			case 1 : 
+				href = arr[1].href;
+				img = arr[1].img;
+				break; 
+			case 2 : 
+				href = arr[2].href;
+				img = arr[2].img;
+				break; 
+		}
+		var t = new Date;
+		img = img + "?t="+t.getTime();
+		if(href != "" && img != ""){
+			$('#ggpic').attr('href', href);
+			$('#ggpic img').attr('src', img);
+		}
+	}
+	replaceAddr([
+	{href:'http://db.auto.sohu.com/jingxuan/',img:'http://auto.sohu.com/upload/wz2014v1/images/bm300-250.jpg'},
+	{href:'http://db.auto.sohu.com/photo/?photo_focus=2',img:'http://auto.sohu.com/upload/wz2014v1/images/fll300-250.jpg'},
+	{href:'http://db.auto.sohu.com/jingxuan/fans.shtml',img:'http://auto.sohu.com/upload/wz2014v1/images/js300-250.jpg'}
+	]);
+})();
+//删掉文章内容中图片的边
+(function(){
+	$(document).ready(function(e){
+		var imgs = $('#contentText').find('img');
+		if(imgs.length<1){
+			return;
+		}
+		imgs.each(function(index, element){
+			$(element).css('border','0 none');
+		});
+	});
+})();
+//计算你会喜欢位置
+/*$(window).load(function(){
+	setTimeout(function() {var right = $('.right');
+	var left = $('.left');
+	var rh = right.height();
+	var rt = right.offset().top;
+	var cs = $('.csplbox');
+	var cst = cs.offset().top;
+	var like = right.find('.mb');
+	var lt = like.offset().top;
+	var lt1 = lt-rt;
+	var cst1 = cst - left.offset().top;
+	if(cst1-rh>20){
+		if($.browser.msie && $.browser.version == "7.0"){
+			like.css('margin-top', (cst-lt +18)+"px");
+		}else{
+			like.css('margin-top', (Number(cst-lt)+18)+"px");
+		}
+	}
+	if(rh - cst1 > 900){
+		like.css('display','none');
+		like.next().css('display','none');
+	}
+	
+	},1000);
+});*/
+
+//----------------dealer------------
+SA.register('article.AREA',function(a,$){
+	var areas = [
+		["110000","北京"],
+		["120000","天津"],
+		["130000","河北","130100","石家庄市","130200","唐山市","130300","秦皇岛市","130400","邯郸市","130500","邢台市","130600","保定市","130700","张家口市","130800","承德市","130900","沧州市","131000","廊坊市","131100","衡水市"],
+		["140000","山西","140100","太原市","140200","大同市","140300","阳泉市","140400","长治市","140500","晋城市","140600","朔州市","140700","晋中市","140800","运城市","140900","忻州市","141000","临汾市","141100","吕梁市"],
+		["150000","内蒙古","150100","呼和浩特市","150200","包头市","150300","乌海市","150400","赤峰市","150500","通辽市","150600","鄂尔多斯市","150700","呼伦贝尔市","150800","巴彦淖尔市","150900","乌兰察布市","152200","兴安盟","152500","锡林郭勒盟","152900","阿拉善盟"],
+		["210000","辽宁","210100","沈阳市","210200","大连市","210300","鞍山市","210400","抚顺市","210500","本溪市","210600","丹东市","210700","锦州市","210800","营口市","210900","阜新市","211000","辽阳市","211100","盘锦市","211200","铁岭市","211300","朝阳市","211400","葫芦岛市"],
+		["220000","吉林","220100","长春市","220200","吉林市","220300","四平市","220400","辽源市","220500","通化市","220600","白山市","220700","松原市","220800","白城市","222400","延边朝鲜族自治州"],
+		["230000","黑龙江","230100","哈尔滨市","230200","齐齐哈尔市","230300","鸡西市","230400","鹤岗市","230500","双鸭山市","230600","大庆市","230700","伊春市","230800","佳木斯市","230900","七台河市","231000","牡丹江市","231100","黑河市","231200","绥化市","232700","大兴安岭地区"],
+		["310000","上海"],
+		["320000","江苏","320100","南京市","320200","无锡市","320300","徐州市","320400","常州市","320500","苏州市","320600","南通市","320700","连云港市","320800","淮安市","320900","盐城市","321000","扬州市","321100","镇江市","321200","泰州市","321300","宿迁市"],
+		["330000","浙江","330100","杭州市","330200","宁波市","330300","温州市","330400","嘉兴市","330500","湖州市","330600","绍兴市","330700","金华市","330800","衢州市","330900","舟山市","331000","台州市","331100","丽水市"],
+		["340000","安徽","340100","合肥市","340200","芜湖市","340300","蚌埠市","340400","淮南市","340500","马鞍山市","340600","淮北市","340700","铜陵市","340800","安庆市","341000","黄山市","341100","滁州市","341200","阜阳市","341300","宿州市","341400","巢湖市","341500","六安市","341600","亳州市","341700","池州市","341800","宣城市"],
+		["350000","福建","350100","福州市","350200","厦门市","350300","莆田市","350400","三明市","350500","泉州市","350600","漳州市","350700","南平市","350800","龙岩市","350900","宁德市"],
+		["360000","江西","360100","南昌市","360200","景德镇市","360300","萍乡市","360400","九江市","360500","新余市","360600","鹰潭市","360700","赣州市","360800","吉安市","360900","宜春市","361000","抚州市","361100","上饶市"],
+		["370000","山东","370100","济南市","370200","青岛市","370300","淄博市","370400","枣庄市","370500","东营市","370600","烟台市","370700","潍坊市","370800","济宁市","370900","泰安市","371000","威海市","371100","日照市","371200","莱芜市","371300","临沂市","371400","德州市","371500","聊城市","371600","滨州市","371700","菏泽市"],
+		["410000","河南","410100","郑州市","410200","开封市","410300","洛阳市","410400","平顶山市","410500","安阳市","410600","鹤壁市","410700","新乡市","410800","焦作市","410900","濮阳市","411000","许昌市","411100","漯河市","411200","三门峡市","411300","南阳市","411400","商丘市","411500","信阳市","411600","周口市","411700","驻马店市"],
+		["420000","湖北","420100","武汉市","420200","黄石市","420300","十堰市","420500","宜昌市","420600","襄樊市","420700","鄂州市","420800","荆门市","420900","孝感市","421000","荆州市","421100","黄冈市","421200","咸宁市","421300","随州市","422800","恩施土家族苗族自治州","429004","仙桃市","429005","潜江市","429006","天门市"],
+		["430000","湖南","430100","长沙市","430200","株洲市","430300","湘潭市","430400","衡阳市","430500","邵阳市","430600","岳阳市","430700","常德市","430800","张家界市","430900","益阳市","431000","郴州市","431100","永州市","431200","怀化市","431300","娄底市","433100","湘西土家族苗族自治州"],
+		["440000","广东","440100","广州市","440200","韶关市","440300","深圳市","440400","珠海市","440500","汕头市","440600","佛山市","440700","江门市","440800","湛江市","440900","茂名市","441200","肇庆市","441300","惠州市","441400","梅州市","441500","汕尾市","441600","河源市","441700","阳江市","441800","清远市","441900","东莞市","442000","中山市","445100","潮州市","445200","揭阳市","445300","云浮市"],
+		["450000","广西","450100","南宁市","450200","柳州市","450300","桂林市","450400","梧州市","450500","北海市","450600","防城港市","450700","钦州市","450800","贵港市","450900","玉林市","451000","百色市","451100","贺州市","451200","河池市","451300","来宾市","451400","崇左市"],
+		["460000","海南","460100","海口市","460200","三亚市","469001","五指山市","469002","琼海市","469003","儋州市","469005","文昌市","469006","万宁市","469007","东方市","469025","定安县","469026","屯昌县","469027","澄迈县","469028","临高县","469030","白沙黎族自治县","469031","昌江黎族自治县","469033","乐东黎族自治县","469034","陵水黎族自治县","469035","保亭黎族苗族自治县","469036","琼中黎族苗族自治县","469037","西沙群岛","469038","南沙群岛"],
+		["500000","重庆"],
+		["510000","四川","510100","成都市","510300","自贡市","510400","攀枝花市","510500","泸州市","510600","德阳市","510700","绵阳市","510800","广元市","510900","遂宁市","511000","内江市","511100","乐山市","511300","南充市","511400","眉山市","511500","宜宾市","511600","广安市","511700","达州市","511800","雅安市","511900","巴中市","512000","资阳市","513200","阿坝藏族羌族自治州","513300","甘孜藏族自治州","513400","凉山彝族自治州"],
+		["520000","贵州","520100","贵阳市","520200","六盘水市","520300","遵义市","520400","安顺市","522200","铜仁地区","522300","黔西南布依族苗族自治州","522400","毕节地区","522600","黔东南苗族侗族自治州","522700","黔南布依族苗族自治州"],
+		["530000","云南","530100","昆明市","530300","曲靖市","530400","玉溪市","530500","保山市","530600","昭通市","530700","丽江市","530800","思茅市","530900","临沧市","532300","楚雄彝族自治州","532500","红河哈尼族彝族自治州","532600","文山壮族苗族自治州","532800","西双版纳傣族自治州","532900","大理白族自治州","533100","德宏傣族景颇族自治州","533300","怒江傈僳族自治州","533400","迪庆藏族自治州"],
+		["540000","西藏","540100","拉萨市","542100","昌都地区","542200","山南地区","542300","日喀则地区","542400","那曲地区","542500","阿里地区","542600","林芝地区"],
+		["610000","陕西","610100","西安市","610200","铜川市","610300","宝鸡市","610400","咸阳市","610500","渭南市","610600","延安市","610700","汉中市","610800","榆林市","610900","安康市","611000","商洛市"],
+		["620000","甘肃","620100","兰州市","620200","嘉峪关市","620300","金昌市","620400","白银市","620500","天水市","620600","武威市","620700","张掖市","620800","平凉市","620900","酒泉市","621000","庆阳市","621100","定西市","621200","陇南市","622900","临夏回族自治州","623000","甘南藏族自治州"],
+		["630000","青海","630100","西宁市","632100","海东地区","632200","海北藏族自治州","632300","黄南藏族自治州","632500","海南藏族自治州","632600","果洛藏族自治州","632700","玉树藏族自治州","632800","海西蒙古族藏族自治州"],
+		["640000","宁夏","640100","银川市","640200","石嘴山市","640300","吴忠市","640400","固原市","640500","中卫市"],
+		["650000","新疆","650100","乌鲁木齐市","650200","克拉玛依市","652100","吐鲁番地区","652200","哈密地区","652300","昌吉回族自治州","652700","博尔塔拉蒙古自治州","652800","巴音郭楞蒙古自治州","652900","阿克苏地区","653000","克孜勒苏柯尔克孜自治州","653100","喀什地区","653200","和田地区","654000","伊犁哈萨克自治州","654200","塔城地区","654300","阿勒泰地区","659001","石河子市","659002","阿拉尔市","659003","图木舒克市","659004","五家渠市"],
+		["710000","台湾"],
+		["810000","香港"],
+		["820000","澳门"]
+	];
+	return areas;
+});
+
+SA.register('article.area',function(a,$){
+	var Data=a.article.AREA,
+		View,
+		defaultOption={
+			p:'#province',
+			pid:-1,
+			c:'#city',
+			cid:-1
+		};
+	View={
+		drawProvince:function($el,id){
+			var chip=[],s='',z=0,index=0;
+			chip.push('<option value="-1">--省份--</option>');
+			for (var i=0,j=Data.length; i<j; i++) {
+				if(id==Data[i][0]){
+					s='selected="selected"';
+					index=i;
+				}else{
+					s='';
+				}
+				chip.push('<option data-index="'+z+'" value="'+Data[i][0]+'"'+s+'>'+Data[i][1]+'</option>');
+				z++;
+			}
+			$el.html( chip.join("\r\n") );
+			return index;
+		},
+		drawCity:function($el,id,index){
+			var chip=[],s='';
+			chip.push('<option value="-1">--城市--</option>');
+			if(!index) {index = 0;}
+			var d = Data[index]?Data[index]:[];
+			for (var i=2,j=d.length; i<j; i += 2) {
+				s=id==d[i]?'selected="selected"':'';
+				chip.push('<option value="'+d[i]+'"'+s+'>'+d[i+1]+'</option>');
+			}
+			if(chip.length == 1){
+				s = id==d[0] ? 'selected="selected"' : '';
+				chip.push('<option value="'+d[0]+'"'+s+'>'+d[1]+'</option>');
+			}
+			$el.html( chip.join("\r\n") );
+		}
+	};
+
+	var CitySelect=function(option){
+		this.option=option;
+		this.init();
+	};
+	CitySelect.prototype={
+		init:function(){
+			var o,E,self;
+			o=this.option=$.extend({},defaultOption,this.option);
+			E=this.E={
+				$elProvince:$(o.p),
+				$elCity:$(o.c)
+			};
+			self=this;
+			E.$elProvince.change(function(){
+				self.onProvinceChange(E.$elProvince.val(),E.$elProvince.children('option:selected').attr('data-index')||-1);
+			});
+
+			E.$elCity.change(function(){
+				self.onCityChange(E.$elCity.val());
+			});
+
+			var index=View.drawProvince( E.$elProvince, o.pid );
+			View.drawCity( E.$elCity, o.cid, index );
+		},
+		onProvinceChange:function(val,index){
+			View.drawCity(this.E.$elCity,val,index);
+		},
+		onCityChange:function(val){
+
+		}
+	};
+	return CitySelect;
+});
+
+SA.register('trims', function(a, $){
+	var trim = function(opt){
+		this.box = opt.box;
+		this.cur = opt.cur;
+		this.dataArr = [];
+		this.init();
+	};
+	trim.prototype = {
+		init: function(){
+			var k = this, chip = [], s;
+			$.ajax({
+				url : tmlist_url,
+				type : "get",
+				dataType: 'jsonp',
+				jsonp:'callback',
+				contentType:"application/x-www-form-urlencoded; charset=gbk", 
+				async : false,
+				success : function(data) {
+				  k.handler(data);
+				  for(var i = 0, l = k.dataArr.length; i<l; i++){
+						s = $.trim(k.cur)==$.trim(k.dataArr[i].id)?'selected="selected"':'';
+						chip.push('<option value="'+k.dataArr[i].id+'"'+s+'>'+k.dataArr[i].name+'</option>');
+					}
+					k.box.html( chip.join("\r\n") );
+			
+			   }
+			});		
+			
+		},
+		handler : function(data){
+			var k = this, i = 0, len, len1, y, t, cy, ct, tid;
+				y = data.trimyears;
+					for (len = y.length; i<len; i++) {
+						cy = y[i].y;
+						t = y[i].trims;
+						for (var j =0, len1 = t.length; j < len1; j++) {
+							ct = t[j].tname; 
+							tid = t[j].tid;
+							k.dataArr.push({name: cy+" "+ct, id : tid});
+							
+						}
+					}
+		}
+	};
+	return trim;
+});
+
+SA.register('askPrice',function(a,$){
+	return function(){
+		var dealerPrice = $('#dealer-price');
+		if(dealerPrice.length == 0) return;
+		var dealerid = dealerPrice.attr('data-dealerid'),
+			modelid = dealerPrice.attr('data-modelid'),
+			brandid = dealerPrice.attr('data-brandid');
+		dealerPrice.on('click','.ask-price', function(e){
+			e.preventDefault();
+			var t = $(this),
+				trimid = t.attr('data-tirmid'),
+				dialogask = $('#dialogask');
+			dealerid = dealerid ? dealerid : '';
+			//车款
+			new a.trims({
+				box: $('#trimmId'),
+				cur: trimid
+			});
+		
+			var cma = sohu_IP_Loc.substr(2);
+			var pma = cma.substr(0, 2) + "0000";
+			//城市
+			new SA.article.area({
+				p : '#provinceId',
+				pid : pma,
+				c : '#cityId',
+				cid : cma
+			});
+			$('#brandId').val(brandid);
+			$('#modelId').val(modelid);
+			$('#dealerId').val(dealerid);
+			dialogask.css('display', 'block');
+			var height = dialogask.height();
+			dialogask.css('top', $(window).height()/2+"px");
+			dialogask.css('margin-top', (-height/2)+"px");
+			$('#dialogbg').css('display', 'block');
+			$('#cname').focus();
+		});
+		$('#dialogask').find('.close').click(function(e){
+			e.preventDefault();
+			$('#dialogask').css('display', 'none');
+			$('#dialogbg').css('display', 'none');
+		});
+		$('#dialogSuccess').find('.close').click(function(e){
+			e.preventDefault();
+			$('#dialogSuccess').css('display', 'none');
+			$('#dialogbg').css('display', 'none');
+		});
+		$('#csbxjbtn').click(function(e){
+			var cityId = $('#cityId'),
+				provinceId = $('#provinceId'),
+				name = $('#cname'),
+				tel = $('#ctel'),
+				dialogSuccess = $('#dialogSuccess'),
+				teltxt = tel.val(), params, url="";
+				if($.trim(provinceId.val())=='')
+				{
+					alert("请选择省份");
+					provinceId.focus();
+					return ;
+				}
+				if($.trim(cityId.val())=='')
+				{
+					alert("请选择城市");
+					cityId.focus();
+					return ;
+				}
+				if($.trim(name.val()) == '')
+				{
+					alert("请输入你的姓名");
+					name.focus();
+					return ;
+				}
+				if(!teltxt){
+					alert("请输入你的手机号");
+					tel.focus();
+					return ;
+				}
+				if(teltxt && !/^1[3|4|5|8][0-9]\d{8,8}$/.test(teltxt)){
+					alert("手机号码格式错误，请重新输入");
+					tel.focus();
+					return ;
+				}
+				$('#askForm1').submit();
+				$('#dialogask').css('display', 'none');
+				dialogSuccess.css('display', 'block');
+				dialogSuccess.css('top', $(window).height()/2+"px");
+				var height = dialogSuccess.height();
+				dialogSuccess.css('margin-top', (-height/2)+"px");
+				var trim = $('#trimmId')[0];
+				var btxt = $('#subNav').find('h2').find('a').eq(1).html();
+				trim = btxt+"&nbsp;"+trim.options[trim.selectedIndex].text;
+				dialogSuccess.find('#contentID').html("您的订单已提交，意向车型："+trim);
+				e.preventDefault();
+				setTimeout(function(){
+					$('#dialogSuccess').css('display', 'none');
+					$('#dialogbg').css('display', 'none');
+				}, 3000);
+			});	
+	};
+});
+// 入口
+$(document).ready(function(){
+	SA.askPrice();
+	// hidden sogou
+	$('#sougousou').css('display', 'none');
+	$('#sogoufuwu').css('display', 'none');
+});
+//--------------dealer--------------
+
+(function(window) {
+	//che jian js code
+	var initw = 0, inith = 0;
+	function g(id){return document.getElementById(id);}
+	function setIframeSize(w, h){
+		if(inith == h){
+			return;
+		}
+		if(w != initw) {
+			initw = w;
+		}
+		if(h != inith) {
+			inith = h + 20;
+		}
+		g('chejianIframe').style.width = w+"px";
+		g('chejianIframe').style.height = h+20+"px";
+	}
+	window.setIframeSize = setIframeSize;
+}(window));

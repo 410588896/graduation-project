@@ -1,0 +1,605 @@
+function escapeRegExp(a) {
+    return a.replace(/([.*+?^${}()|[\]\/\\])/g, "\\$1")
+}
+
+function random() {
+    return (new Date).getTime()
+}
+
+function getScript(a, b, c) {
+    var e, f, d = document.createElement("script");
+    d.type = "text/javascript";
+    c && (d.charset = c);
+    d.src = a;
+    e = document.getElementsByTagName("head")[0];
+    f = !1;
+    d.onload = d.onreadystatechange = function() {
+        if (!(f || this.readyState && "loaded" !== this.readyState && "complete" !== this.readyState)) {
+            f = !0;
+            b && b();
+            d.onload = d.onreadystatechange = null;
+            setTimeout(function() {
+                e.removeChild(d)
+            }, 1)
+        }
+    };
+    e.appendChild(d)
+}
+
+function checkUD(a, b) {
+    var c = void 0 !== b ? b : a.change;
+    return c > 0 ? window.UPCOLOR || "up" : 0 > c ? window.DOWNCOLOR || "down" : window.FLATCOLOR || "flat"
+}
+
+function merge(a, b) {
+    for (var c in b) a[c] = "object" == typeof a[c] && "object" == typeof b[c] ? arguments.callee(b[c], a[c]) : b[c];
+    return a
+}
+var hqParser, clock;
+Function.prototype.fnBind || (Function.prototype.fnBind = function(a, b) {
+    var c = this;
+    return function() {
+        var d, e;
+        if (b && arguments.length) {
+            d = Array.prototype.slice.call(b, 0);
+            for (e = 0; e < arguments.length; e++) Array.prototype.push.call(d, arguments[e])
+        }
+        return c.apply(a || this, d || b || arguments)
+    }
+});
+Function.prototype.bindArg || (Function.prototype.bindArg = function() {
+    return this.fnBind(null, arguments)
+});
+Number.prototype.toFixed = function(a) {
+    var d, b = Math.floor(this * Math.pow(10, a)) + .5,
+        c = 0 > b ? "-" : "";
+    b = Math.abs(b);
+    Math.abs(this) * Math.pow(10, a) - b >= -.5 * Math.pow(10, -14 + a) ? b += .5 : b -= .5;
+    b += "";
+    if (0 == a) return c + b;
+    b = b.split("");
+    if (b.length <= a) {
+        for (d = b.length; a > d; d++) b.unshift("0");
+        b.unshift(".");
+        b.unshift("0")
+    } else b.splice(b.length - a, 0, ".");
+    return c + b.join("")
+};
+String.prototype.toFixed = function(a) {
+    return isNaN(1 * this) ? this.toString() : (1 * this).toFixed(a)
+};
+String.prototype.format = function(a) {
+    var b, c, d, e, f;
+    a = a || ",";
+    b = this + "";
+    if ("number" != typeof(1 * b)) return b;
+    c = "";
+    d = "";
+    if (b.indexOf("-") > -1) {
+        d = "-";
+        b = b.replace("-", "")
+    }
+    if (b.indexOf(".") > -1) {
+        e = b.split(".");
+        b = e[0];
+        c = "." + e[1]
+    }
+    if (b.length > 3) {
+        b = b.replace(/\d{3}$/, function(a) {
+            f = "," + a;
+            return ""
+        });
+        return d + arguments.callee.apply(b, arguments) + f + c
+    }
+    return d + b + c
+};
+Number.prototype.format = function() {
+    return String.prototype.format.apply(this + "", arguments)
+};
+String.prototype.preFull = function(a, b) {
+    var c = this.toString();
+    a = a || 2;
+    b = b || "0";
+    for (; c.length < a;) c = b + c;
+    return c
+};
+Number.prototype.preFull = function(a, b) {
+    return (this + "").preFull(a, b)
+};
+if (!window.Cookie) {
+    window.Cookie = {};
+    Cookie.get = function(a) {
+        var b = document.cookie.match("(?:^|;)\\s*" + escapeRegExp(a) + "=([^;]*)");
+        return b ? b[1] || "" : ""
+    };
+    Cookie.set = function(a, b, c) {
+        var d, e, f, g, h;
+        c = c || {};
+        if (null === b) {
+            b = "";
+            c.expires = -1
+        }
+        d = "";
+        if (c.expires && (1 * c.expires || c.expires.toUTCString)) {
+            if (1 * c.expires) {
+                e = new Date;
+                e.setTime(e.getTime() + 1e3 * 60 * 60 * 24 * c.expires)
+            } else e = c.expires;
+            d = "; expires=" + e.toUTCString()
+        }
+        f = c.path ? "; path=" + c.path : "";
+        g = c.domain ? "; domain=" + c.domain : "";
+        h = c.secure ? "; secure" : "";
+        document.cookie = [a, "=", b, d, f, g, h].join("")
+    }
+}
+hqParser = new function() {
+    function a(a, b) {
+        var c, d, e;
+        if (!a) {
+            c = {};
+            c.enName = c.name = c.open = c.preClose = c.low = c.high = c.now = c.change = c.changeP = c.buy = c.sell = c.volume = c.amount = c.pe = c.income = c.high52 = c.low52 = c.low52 = c.date = c.time = c.swing = "--";
+            return c
+        }
+        d = a.split(",");
+        e = {};
+        if (b)
+            if (b.indexOf("hk") > -1) {
+                e.symbol = b;
+                e.sym = b.replace("hk", "")
+            } else {
+                e.symbol = "hk" + b;
+                e.sym = b
+            }
+        e.enName = d[0];
+        e.name = d[1];
+        e.open = 1 * d[2];
+        e.preClose = 1 * d[3];
+        e.high = 1 * d[4];
+        e.low = 1 * d[5];
+        e.now = 1 * d[6];
+        e.change = 1 * d[7];
+        e.changeP = 1 * d[8];
+        e.buy = 1 * d[9];
+        e.sell = 1 * d[10];
+        e.volume = 1 * d[12];
+        e.amount = 1 * d[11];
+        e.pe = 1 * d[13];
+        e.pe = e.pe || "--";
+        e.income = 1 * d[14];
+        e.income = e.income || "--";
+        e.high52 = 1 * d[15];
+        e.low52 = 1 * d[16];
+        e.date = d[17];
+        e.time = d[18];
+        if (!e.open) {
+            e.open = "--";
+            if (!e.now) {
+                e.high = "--";
+                e.low = "--"
+            }
+        }
+        if (!e.now) {
+            e.change = "--";
+            e.changeP = "--"
+        }
+        if (e.preClose) {
+            e.swing = 100 * ((e.high - e.low) / e.preClose);
+            e.swing = isNaN(e.swing) ? "--" : e.swing
+        } else {
+            e.preClose = "--";
+            e.swing = "--"
+        }
+        return e
+    }
+
+    function b(a, b) {
+        var c, d, e, f;
+        if (!a) {
+            c = {};
+            c.enName = c.name = c.open = c.preClose = c.low = c.high = c.now = c.change = c.changeP = c.buy = c.sell = c.volume = c.amount = c.pe = c.income = c.high52 = c.low52 = c.low52 = c.date = c.time = c.swing = "--";
+            return c
+        }
+        d = a.split(",");
+        e = {};
+        b && (e.sym = b);
+        e.name = d[0];
+        e.now = 1 * d[1];
+        e.changeP = 1 * d[2];
+        e.updateTime = d[3];
+        e.change = 1 * d[4];
+        e.open = 1 * d[5];
+        e.high = 1 * d[6];
+        e.low = 1 * d[7];
+        e.high52 = 1 * d[8];
+        e.low52 = 1 * d[9];
+        e.volume = 1 * d[10];
+        e.averageVolume = 1 * d[11];
+        e.totalShare = 1 * d[12];
+        e.eps = 1 * d[13];
+        e.pe = 1 * d[14];
+        e.pe = e.pe || "--";
+        e.beta = 1 * d[16];
+        e.dividend = 1 * d[17];
+        e.dividend = e.dividend || "--";
+        e.income = 1 * d[18];
+        e.income = e.income || "--";
+        e.shares = 1 * d[19];
+        e.hourTradingPrice = 1 * d[21];
+        e.hourTradingChangeP = 1 * d[22];
+        e.hourTradingChange = 1 * d[23];
+        e.hourTradingDateTime = d[24];
+        f = d[24].split(" ");
+        e.hourTradingDate = f[0] + " " + f[1];
+        e.hourTradingTime = f[2] || "";
+        e.dateTime = d[25];
+        f = d[25].split(" ");
+        e.date = f[0] + " " + f[1];
+        e.time = f[2];
+        e.preClose = 1 * d[26];
+        e.hourTradingVolume = 1 * d[27];
+        if (!e.open) {
+            e.open = "--";
+            e.high = "--";
+            e.low = "--"
+        }
+        if (!(e.now && "--" != e.open || e.change)) {
+            e.change = "--";
+            e.changeP = "--"
+        }
+        if (e.preClose) {
+            e.swing = 100 * ((e.high - e.low) / e.preClose);
+            e.swing = isNaN(e.swing) ? "--" : e.swing
+        } else {
+            e.preClose = "--";
+            e.swing = "--"
+        }
+        return e
+    }
+
+    function c(a, b) {
+        var c, d, e, f, g;
+        if (!a) {
+            c = {};
+            c.enName = c.name = c.open = c.preClose = c.low = c.high = c.now = c.change = c.changeP = c.buy = c.sell = c.volume = c.amount = c.pe = c.income = c.high52 = c.low52 = c.low52 = c.date = c.time = c.swing = "--";
+            return c
+        }
+        d = a.split(",");
+        e = {};
+        if (b)
+            if (b.indexOf("s") > -1) {
+                e.symbol = b;
+                e.sym = b.replace(/s[hz]/, "")
+            } else {
+                e.sym = b;
+                f = b.charAt(0);
+                "69".indexOf(f) > -1 && (e.symbol = "sh" + b);
+                "023".indexOf(f) > -1 && (e.symbol = "sz" + b)
+            }
+        e.name = d[0];
+        e.open = 1 * d[1];
+        e.preClose = 1 * d[2];
+        e.now = 1 * d[3];
+        e.high = 1 * d[4];
+        e.low = 1 * d[5];
+        e.buy = 1 * d[6];
+        e.sell = 1 * d[7];
+        e.volume = 1 * d[8];
+        e.symbol && /^(sh000|sh580)\d*/.test(e.symbol) && (e.volume *= 100);
+        e.amount = 1 * d[9];
+        e.date = d[30];
+        e.time = d[31];
+        e.status = d[32];
+        g = {
+            "00": "",
+            "01": "¡ŸÕ£1H",
+            "02": "Õ£≈∆",
+            "03": "Õ£≈∆",
+            "04": "¡ŸÕ£",
+            "05": "Õ£1/2",
+            "07": "‘›Õ£",
+            "-1": "Œﬁº«¬º",
+            "-2": "Œ¥…œ –",
+            "-3": "ÕÀ –"
+        };
+        e.statusWord = "00" == e.status || e.buy || e.sell ? "" : g[e.status];
+        "02" != e.status && "03" != e.status || e.buy || e.sell || (e.stopDay = !0);
+        e.change = e.now - e.preClose;
+        e.changeP = 100 * (e.change / e.preClose);
+        if (!e.open) {
+            e.open = "--";
+            e.high = "--";
+            e.low = "--"
+        }
+        if (!e.now || "--" == e.open) {
+            e.change = "--";
+            e.changeP = "--"
+        }
+        if (e.preClose) {
+            e.swing = 100 * ((e.high - e.low || 0) / e.preClose);
+            e.swing = isNaN(e.swing) ? "--" : e.swing
+        } else {
+            e.preClose = "--";
+            e.swing = "--"
+        }
+        e.now = e.now || e.preClose;
+        return e
+    }
+
+    function d(a) {
+        var c, d, e;
+        if (!a) {
+            c = {};
+            c.enName = c.name = c.open = c.preClose = c.low = c.high = c.now = c.change = c.changeP = c.buy = c.sell = c.volume = c.amount = c.pe = c.income = c.high52 = c.low52 = c.low52 = c.date = c.time = c.swing = "--";
+            return c
+        }
+        d = a.split(",");
+        e = {};
+        e.name = d[0];
+        e.now = 1 * d[1];
+        e.change = 1 * d[2];
+        e.changeP = 1 * d[3];
+        e.time = d[4];
+        if (!e.now) {
+            e.change = "--";
+            e.changeP = "--"
+        }
+        return e
+    }
+
+    function e(a) {
+        var c, d, e;
+        if (!a) {
+            c = {};
+            c.enName = c.name = c.open = c.preClose = c.low = c.high = c.now = c.change = c.changeP = c.buy = c.sell = c.volume = c.amount = c.pe = c.income = c.high52 = c.low52 = c.low52 = c.date = c.time = c.swing = "--";
+            return c
+        }
+        d = a.split(",");
+        e = {};
+        e.now = 1 * d[0];
+        e.change = e.now - d[7];
+        e.changeP = 1 * d[1];
+        if (!e.now) {
+            e.change = "--";
+            e.changeP = "--"
+        }
+        return e
+    }
+
+    function f(a, b, c) {
+        var d = arguments.callee[a];
+        return d ? d(a, b, c) : {}
+    }
+    f.a = c;
+    f.b = d;
+    f.hk = a;
+    f.us = b;
+    f.hf = e;
+    return f
+};
+clock = new function() {
+    var c, a = "//hq.sinajs.cn/?rn=$random&list=sys_time",
+        b = [],
+        d = /\d{2}:\d{2}:\d{2}/,
+        e = !1;
+    this.init = function(a) {
+        var c, d;
+        a = a || [];
+        for (d = 0; d < a.length; d++) {
+            c = {};
+            c.el = document.getElementById(a[d].elID);
+            c.diff = 1e3 * 60 * 60 * getGlobalTimezone(a[d].area);
+            c.template = a[d].template;
+            b.push(c)
+        }
+        if (e) this.draw();
+        else {
+            e = !0;
+            (window.hq_str_sys_time || window.StandardBJTime) && this.setTime();
+            this.getTime();
+            setInterval(this.getTime.fnBind(this), 36e5);
+            setInterval(this.draw.fnBind(this), 1e3)
+        }
+    };
+    this.add = function() {};
+    this.getTime = function() {
+        getScript(a.replace("$random", random()), this.setTime.fnBind(this))
+    };
+    this.setTime = function() {
+        c = 1e3 * (window.hq_str_sys_time || window.StandardBJTime);
+        this.draw()
+    };
+    this.time = function() {
+        return new Date(c)
+    };
+    this.draw = function() {
+        var a, e;
+        if (c) {
+            for (e = 0; e < b.length; e++) {
+                a = new Date(c + b[e].diff);
+                b[e].el.innerHTML = b[e].template ? b[e].template.replace("YY", a.getFullYear()).replace("Y", (a.getFullYear() % 100).preFull()).replace("MM", (a.getMonth() + 1).preFull()).replace("DD", a.getDate().preFull()).replace("H", a.getHours().preFull()).replace("M", a.getMinutes().preFull()).replace("S", a.getSeconds().preFull()) : a.getMonth() + 1 + "‘¬" + a.getDate() + "»’ " + a.toString().match(d)[0]
+            }
+            c += 1e3
+        }
+    }
+};
+! function() {
+    function a(a) {
+        return "string" == typeof a ? document.getElementById(a) : a
+    }
+    var c, b = function(b) {
+        function c(a, b, c) {
+            a.addEventListener ? a.addEventListener(b, c, !1) : a.attachEvent("on" + b, c)
+        }
+
+        function e(a) {
+            a = a || event;
+            13 == a.keyCode && d.checkSubmit()
+        }
+        merge(this, b);
+        this.name = a(this.name);
+        this.psw = a(this.psw);
+        this.remember = a(this.remember);
+        this.loginBtn = a(this.loginBtn);
+        this.days = a(this.days);
+        this.logoutBtn = a(this.logoutBtn);
+        var d = this;
+        this.loginBtn && c(this.loginBtn, "click", this.checkSubmit.fnBind(this));
+        this.logoutBtn && c(this.logoutBtn, "click", this.logout.fnBind(this));
+        this.name && this.nameEnter && c(this.name, "keyup", e);
+        this.psw && this.pswEnter && c(this.psw, "keyup", e)
+    };
+    merge(b.prototype, {
+        name: null,
+        psw: null,
+        nameEnter: !0,
+        pswEnter: !0,
+        remember: null,
+        loginBtn: null,
+        logoutBtn: null,
+        days: 30,
+        onLoginSuccess: function() {},
+        onLoginFailed: function() {},
+        onLogoutSuccess: function() {},
+        onLogoutFailed: function() {},
+        onUserChanged: function() {},
+        onSubmit: function() {
+            return !0
+        },
+        onCheckFailed: function() {},
+        checkSubmit: function() {
+            this.onSubmit(this.name.value, this.psw.value) ? this.login() : this.onCheckFailed();
+            return !1
+        },
+        getDays: function() {
+            if (!this.remember) return void 0;
+            if ("number" == typeof this.remember) return this.remember;
+            switch (this.remember.tagName) {
+                case "INPUT":
+                    return this.remember.checked ? 1 * this.remember.value || "number" == typeof this.days ? this.days : this.days.value : void 0;
+                case "SELECT":
+                    return this.remember.value;
+                default:
+                    return void 0
+            }
+        },
+        login: function(a, b, c) {
+            if (!a && !this.name.value) return !1;
+            var d = this;
+            sinaSSOController.customLoginCallBack = function(a) {
+                a && a.result === !0 ? d.onLoginSuccess(sinaSSOController.getSinaCookie()) : a && a.result === !1 ? d.onLoginFailed(a) : d.onLoginFailed(a)
+            };
+            sinaSSOController.login(a || this.name.value, b || this.psw.value, c || this.getDays());
+            return !1
+        },
+        logout: function() {
+            var a = this;
+            sinaSSOController.customLogoutCallBack = function(b) {
+                b.result ? a.onLogoutSuccess(a) : a.onLogoutFailed("ÕÀ≥ˆ ß∞‹...")
+            };
+            sinaSSOController.logout();
+            return !1
+        }
+    });
+    c = new function() {
+        function j(a) {
+            if (!h) {
+                d = 1 * a || d || 1e3;
+                h = setInterval(q, d);
+                sinaSSOController.getSinaCookie() && sinaSSOController.autoLogin(q)
+            }
+        }
+
+        function k() {
+            clearInterval(h);
+            m()
+        }
+
+        function l(a) {
+            a._onLoginSuccess = a.onLoginSuccess;
+            a._onLogoutSuccess = a.onLogoutSuccess;
+            a.onLoginSuccess = q;
+            a.onLogoutSuccess = q
+        }
+
+        function m() {
+            for (var a = 0; a < i.length; a++) {
+                i[a].onLoginSuccess = i[a]._onLoginSuccess;
+                i[a].onLogoutSuccess = i[a]._onLogoutSuccess
+            }
+        }
+
+        function n() {
+            for (var a = 0; a < i.length; a++) i[a]._onLoginSuccess(f)
+        }
+
+        function o() {
+            for (var a = 0; a < i.length; a++) i[a]._onLogoutSuccess(f)
+        }
+
+        function p(a, b) {
+            for (var c = 0; c < i.length; c++) i[c].onUserChanged(a, b)
+        }
+
+        function q() {
+            var a = sinaSSOController.getSinaCookie();
+            if (a)
+                if (f) {
+                    if (a.uid != f.uid) {
+                        p(a, f);
+                        f = a
+                    }
+                } else {
+                    f = a;
+                    n()
+                }
+            else if (f) {
+                o();
+                f = null
+            }
+        }
+        var a = "finance",
+            c = "finance",
+            d = 1e3,
+            f = null,
+            g = !0,
+            h = null,
+            i = [];
+        window.sinaSSOConfig = merge({
+            entry: a,
+            service: c,
+            setDomain: g
+        }, window.sinaSSOConfig || {});
+        this.startMonitor = j;
+        this.setFreq = function(a) {
+            clearInterval(h);
+            d = a || d;
+            h = setInterval(q, d)
+        };
+        this.stopMonitor = k();
+        this.checkImmediate = q;
+        this.add = function(a) {
+            var c = a;
+            c.constructor != b && (c = new b(c));
+            i.push(c);
+            f && c.onLoginSuccess(f);
+            l(c);
+            1 == i.length && j();
+            return this
+        };
+        this.get = function(a) {
+            return i(a)
+        };
+        this.user = function() {
+            return f
+        }
+    };
+    window.LoginManager = c
+}();
+Object.toQueryString = function(a) {
+    var b, c;
+    if ("string" == typeof a) return encodeURIComponent(a);
+    b = [];
+    for (c in a) b.push(encodeURIComponent(c) + "=" + encodeURIComponent(a[c]));
+    return b.join("&")
+};
