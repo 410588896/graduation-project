@@ -8,10 +8,17 @@
 
 struct LRank
 {
-	
+	BOOL LPT;
+	BOOL LL;
+	INT LI;
+	INT LT;
+	INT LWL;
+	INT LCT;
+	INT LOI;
+	INT LSED;
 };
 
-INT LinkRank(const struct LRank &Link);
+BOOL LinkRank(const struct LRank &Link);
 
 #endif
 
